@@ -2,31 +2,44 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Claim.io 3D — First Person Territory</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Claim.io 3D</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
+  * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
+  html, body {
+    width: 100%; height: 100%;
     background: #020205;
     color: #fff;
     font-family: 'Segoe UI', system-ui, sans-serif;
     overflow: hidden;
-    user-select: none;
+    position: fixed;
   }
   
+  canvas {
+    display: block;
+    width: 100vw !important;
+    height: 100vh !important;
+    position: fixed !important;
+    top: 0; left: 0;
+    z-index: 1;
+  }
+  
+  /* BLOCKER / START SCREEN */
   #blocker {
-    position: absolute;
+    position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(2, 2, 8, 0.92);
+    background: rgba(2, 2, 8, 0.95);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 100;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    text-align: center;
   }
   #blocker h1 {
-    font-size: 64px;
+    font-size: clamp(36px, 10vw, 64px);
     font-weight: 900;
     background: linear-gradient(135deg, #e94560, #ff6b81);
     -webkit-background-clip: text;
@@ -34,91 +47,90 @@
     margin-bottom: 10px;
     letter-spacing: -2px;
   }
-  #blocker p {
-    font-size: 18px;
-    color: #889;
-    margin-bottom: 30px;
-  }
+  #blocker p { font-size: 16px; color: #889; margin-bottom: 8px; }
   #blocker .key {
     display: inline-block;
     background: #1a1a2e;
     border: 1px solid #334;
-    padding: 4px 12px;
+    padding: 4px 10px;
     border-radius: 6px;
     font-family: monospace;
     color: #e94560;
-    margin: 0 4px;
+    margin: 0 2px;
+    font-size: 13px;
   }
   #blocker button {
-    padding: 16px 48px;
+    margin-top: 24px;
+    padding: 18px 50px;
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 800;
     border: none;
-    border-radius: 12px;
+    border-radius: 14px;
     background: linear-gradient(135deg, #e94560, #c73e54);
     color: #fff;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 0 30px rgba(233, 69, 96, 0.4);
+    box-shadow: 0 0 40px rgba(233, 69, 96, 0.4);
+    animation: pulse 2s infinite;
   }
-  #blocker button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 50px rgba(233, 69, 96, 0.6);
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
   }
   
+  /* HUD */
   #hud {
-    position: absolute;
+    position: fixed;
     top: 0; left: 0; width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 30px;
+    padding: 12px 16px;
     pointer-events: none;
     z-index: 10;
   }
   .hud-box {
-    background: rgba(10, 10, 20, 0.7);
-    border: 1px solid rgba(233, 69, 96, 0.3);
+    background: rgba(10, 10, 20, 0.75);
+    border: 1px solid rgba(233, 69, 96, 0.25);
     border-radius: 10px;
-    padding: 10px 20px;
+    padding: 8px 14px;
     backdrop-filter: blur(4px);
   }
-  .hud-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #778; }
-  .hud-value { font-size: 28px; font-weight: 800; }
+  .hud-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #778; }
+  .hud-value { font-size: 24px; font-weight: 800; }
   #hudTime { color: #f39c12; }
   #hudPlayer { color: #e94560; }
   #hudBot { color: #2ecc71; }
   
   #crosshair {
-    position: absolute;
+    position: fixed;
     top: 50%; left: 50%;
     width: 20px; height: 20px;
     transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 5;
+    opacity: 0;
   }
+  .desktop #crosshair { opacity: 1; }
   #crosshair::before, #crosshair::after {
-    content: '';
-    position: absolute;
-    background: rgba(255,255,255,0.8);
+    content: ''; position: absolute; background: rgba(255,255,255,0.8);
   }
   #crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
   #crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
   
   #powerupBar {
-    position: absolute;
-    bottom: 30px;
+    position: fixed;
+    bottom: 100px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 10px;
+    gap: 8px;
     z-index: 10;
     pointer-events: none;
   }
   .pup {
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     opacity: 0;
@@ -130,8 +142,77 @@
   .pup-shield { background: rgba(155,89,182,0.2); color: #9b59b6; border-color: #9b59b6; }
   .pup-bomb { background: rgba(231,76,60,0.2); color: #e74c3c; border-color: #e74c3c; }
   
-  #overlayEnd {
+  /* TOUCH CONTROLS */
+  #touchControls {
+    position: fixed;
+    bottom: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 20;
+    display: none;
+  }
+  .touch-device #touchControls { display: block; }
+  
+  /* Joystick */
+  #joystickZone {
     position: absolute;
+    bottom: 20px; left: 20px;
+    width: 160px; height: 160px;
+    pointer-events: auto;
+  }
+  #joystickBase {
+    position: absolute;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  #joystickThumb {
+    position: absolute;
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: rgba(233, 69, 96, 0.6);
+    border: 2px solid rgba(255,255,255,0.3);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 0.05s;
+  }
+  
+  /* Action Button */
+  #actionBtn {
+    position: absolute;
+    bottom: 30px; right: 30px;
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: rgba(233, 69, 96, 0.35);
+    border: 2px solid rgba(233, 69, 96, 0.6);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    user-select: none;
+    backdrop-filter: blur(4px);
+  }
+  #actionBtn:active {
+    background: rgba(233, 69, 96, 0.6);
+    transform: scale(0.95);
+  }
+  
+  /* Camera zone (right half) */
+  #camZone {
+    position: absolute;
+    top: 80px; right: 0;
+    width: 60%; height: calc(100% - 180px);
+    pointer-events: auto;
+  }
+  
+  /* Overlay end */
+  #overlayEnd {
+    position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(2, 2, 8, 0.93);
     display: none;
@@ -139,10 +220,12 @@
     justify-content: center;
     align-items: center;
     z-index: 200;
+    padding: 20px;
+    text-align: center;
   }
   #overlayEnd.visible { display: flex; }
-  #overlayEnd h2 { font-size: 52px; margin-bottom: 10px; }
-  #overlayEnd p { font-size: 20px; color: #889; margin-bottom: 30px; }
+  #overlayEnd h2 { font-size: clamp(32px, 8vw, 52px); margin-bottom: 10px; }
+  #overlayEnd p { font-size: 18px; color: #889; margin-bottom: 30px; }
   #overlayEnd button {
     padding: 14px 40px;
     font-size: 18px;
@@ -153,6 +236,8 @@
     color: #fff;
     cursor: pointer;
   }
+  
+  .hidden { display: none !important; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -160,10 +245,15 @@
 
 <div id="blocker">
   <h1>CLAIM.IO 3D</h1>
-  <p>Reclama territorio. Roba al enemigo. Domina el mapa.</p>
-  <p style="margin-bottom:8px;"><span class="key">WASD</span> Moverse · <span class="key">MOUSE</span> Mirar · <span class="key">CLICK</span> Reclamar/Atacar</p>
-  <p style="margin-bottom:30px; font-size:14px; color:#556;">Pasa por encima de los tiles para pintarlos. Recoge power-ups brillantes.</p>
-  <button id="btnStart">► CLICK PARA JUGAR</button>
+  <p id="desktopHint">Reclama territorio. Roba al enemigo. Domina.</p>
+  <p id="mobileHint" class="hidden">Reclama territorio. Roba. Domina el mapa.</p>
+  <p id="controlsDesktop" style="margin-bottom:20px;">
+    <span class="key">WASD</span> Mover · <span class="key">MOUSE</span> Mirar · <span class="key">CLICK</span> Reclamar
+  </p>
+  <p id="controlsMobile" class="hidden" style="margin-bottom:20px; color:#889;">
+    Joystick para mover · Desliza para mirar · Botón rojo para reclamar
+  </p>
+  <button id="btnStart">► JUGAR</button>
 </div>
 
 <div id="hud">
@@ -171,7 +261,7 @@
     <div class="hud-label">Tiempo</div>
     <div class="hud-value" id="hudTime">2:00</div>
   </div>
-  <div style="display:flex; gap:12px;">
+  <div style="display:flex; gap:10px;">
     <div class="hud-box">
       <div class="hud-label">Tú</div>
       <div class="hud-value" id="hudPlayer">0</div>
@@ -191,6 +281,15 @@
   <div class="pup pup-bomb" id="pupBomb">💣 Bomba</div>
 </div>
 
+<div id="touchControls">
+  <div id="joystickZone">
+    <div id="joystickBase"></div>
+    <div id="joystickThumb"></div>
+  </div>
+  <div id="camZone"></div>
+  <div id="actionBtn">RECLAMAR</div>
+</div>
+
 <div id="overlayEnd">
   <h2 id="endTitle">¡Ronda terminada!</h2>
   <p id="endText">Resultado</p>
@@ -198,7 +297,7 @@
 </div>
 
 <script>
-  // ==========================================
+// ==========================================
 //  CONFIGURACIÓN
 // ==========================================
 const CFG = {
@@ -224,6 +323,20 @@ const WORLD = CFG.GRID * CFG.TILE;
 const WH = WORLD / 2;
 
 // ==========================================
+//  DETECCIÓN DE DISPOSITIVO
+// ==========================================
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+if(isTouchDevice) {
+  document.body.classList.add('touch-device');
+  document.getElementById('desktopHint').classList.add('hidden');
+  document.getElementById('mobileHint').classList.remove('hidden');
+  document.getElementById('controlsDesktop').classList.add('hidden');
+  document.getElementById('controlsMobile').classList.remove('hidden');
+} else {
+  document.body.classList.add('desktop');
+}
+
+// ==========================================
 //  THREE.JS SETUP
 // ==========================================
 const scene = new THREE.Scene();
@@ -233,8 +346,9 @@ scene.fog = new THREE.Fog(0x020205, 30, 90);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
 camera.position.set(0, 2.5, 0);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
@@ -252,7 +366,6 @@ dirLight.shadow.camera.top = 60;
 dirLight.shadow.camera.bottom = -60;
 scene.add(dirLight);
 
-// Luz del jugador
 const playerLight = new THREE.PointLight(CFG.COLORS.player, 1.2, 25);
 scene.add(playerLight);
 
@@ -279,7 +392,7 @@ function createGrid() {
       );
       mesh.receiveShadow = true;
       scene.add(mesh);
-      row.push({ mesh, owner: null, lastClaim: 0 });
+      row.push({ mesh, owner: null });
     }
     tiles.push(row);
   }
@@ -315,7 +428,7 @@ function claimTile(x, z, owner, force = false) {
   }
   
   if(t.owner && t.owner !== owner) {
-    const victim = t.owner === 'player' ? game.player : game.bots.find(b => b.id === t.owner);
+    const victim = t.owner === 'player' ? {shield: game.playerShield} : game.bots.find(b => b.id === t.owner);
     if(victim && victim.shield > 0) return false;
   }
   
@@ -338,8 +451,8 @@ function claimTile(x, z, owner, force = false) {
   else { const b = game.bots.find(bo => bo.id === owner); if(b) b.score++; }
   
   return true;
-}
-// ==========================================
+       }
+ // ==========================================
 //  BOTS
 // ==========================================
 class Bot {
@@ -514,9 +627,9 @@ function applyPowerup(target, type) {
       if(type === 'bomb') b.speed = CFG.BOT_SPEED * 2;
     }
   }
-  }
+}
  // ==========================================
-//  INPUT & MOVIMIENTO FPS
+//  INPUT - TECLADO / RATÓN (PC)
 // ==========================================
 const keys = {};
 let isLocked = false;
@@ -528,7 +641,13 @@ const blocker = document.getElementById('blocker');
 const btnStart = document.getElementById('btnStart');
 
 btnStart.addEventListener('click', () => {
-  renderer.domElement.requestPointerLock();
+  if(!isTouchDevice) {
+    renderer.domElement.requestPointerLock();
+  } else {
+    // En móvil, simplemente ocultamos el blocker
+    isLocked = true;
+    blocker.style.display = 'none';
+  }
 });
 
 document.addEventListener('pointerlockchange', () => {
@@ -537,14 +656,20 @@ document.addEventListener('pointerlockchange', () => {
 });
 
 document.addEventListener('mousemove', (e) => {
-  if(!isLocked) return;
+  if(!isLocked || isTouchDevice) return;
   camera.rotation.y -= e.movementX * 0.002;
   camera.rotation.x -= e.movementY * 0.002;
   camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
 });
 
+// Click para reclamar (PC)
 document.addEventListener('mousedown', () => {
-  if(!isLocked || game.state !== 'playing') return;
+  if(!isLocked || isTouchDevice || game.state !== 'playing') return;
+  tryClaimPlayer();
+});
+
+function tryClaimPlayer() {
+  if(game.playerClaimCd > 0) return;
   
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
@@ -556,11 +681,10 @@ document.addEventListener('mousedown', () => {
   if(target) {
     const idx = getTileIdx(target.x, target.z);
     if(idx) {
-      if(game.playerClaimCd <= 0) {
-        const claimed = claimTile(idx.x, idx.z, 'player');
-        if(claimed) game.playerClaimCd = CFG.CLAIM_CD;
-        
-        if(claimed && game.playerBomb > 0) {
+      const claimed = claimTile(idx.x, idx.z, 'player');
+      if(claimed) {
+        game.playerClaimCd = CFG.CLAIM_CD;
+        if(game.playerBomb > 0) {
           for(let dz = -1; dz <= 1; dz++) {
             for(let dx = -1; dx <= 1; dx++) {
               claimTile(idx.x + dx, idx.z + dz, 'player');
@@ -571,6 +695,119 @@ document.addEventListener('mousedown', () => {
       }
     }
   }
+}
+
+// ==========================================
+//  INPUT - TÁCTIL (MÓVIL)
+// ==========================================
+let touchJoystick = { active: false, id: null, startX: 0, startY: 0, dx: 0, dy: 0 };
+let touchCam = { active: false, id: null, lastX: 0, lastY: 0 };
+let touchAction = false;
+
+const joystickZone = document.getElementById('joystickZone');
+const joystickThumb = document.getElementById('joystickThumb');
+const camZone = document.getElementById('camZone');
+const actionBtn = document.getElementById('actionBtn');
+
+joystickZone.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  touchJoystick.active = true;
+  touchJoystick.id = t.identifier;
+  const rect = joystickZone.getBoundingClientRect();
+  touchJoystick.startX = rect.left + rect.width/2;
+  touchJoystick.startY = rect.top + rect.height/2;
+  updateJoystick(t.clientX, t.clientY);
+}, {passive: false});
+
+joystickZone.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for(let i = 0; i < e.changedTouches.length; i++) {
+    if(e.changedTouches[i].identifier === touchJoystick.id) {
+      updateJoystick(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+      break;
+    }
+  }
+}, {passive: false});
+
+joystickZone.addEventListener('touchend', e => {
+  e.preventDefault();
+  for(let i = 0; i < e.changedTouches.length; i++) {
+    if(e.changedTouches[i].identifier === touchJoystick.id) {
+      touchJoystick.active = false;
+      touchJoystick.dx = 0;
+      touchJoystick.dy = 0;
+      joystickThumb.style.transform = `translate(-50%, -50%)`;
+      break;
+    }
+  }
+}, {passive: false});
+
+function updateJoystick(cx, cy) {
+  const maxDist = 40;
+  let dx = cx - touchJoystick.startX;
+  let dy = cy - touchJoystick.startY;
+  const d = Math.hypot(dx, dy);
+  if(d > maxDist) { dx = (dx/d) * maxDist; dy = (dy/d) * maxDist; }
+  touchJoystick.dx = dx / maxDist;
+  touchJoystick.dy = dy / maxDist;
+  joystickThumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+}
+
+// Cámara táctil (zona derecha)
+camZone.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  touchCam.active = true;
+  touchCam.id = t.identifier;
+  touchCam.lastX = t.clientX;
+  touchCam.lastY = t.clientY;
+}, {passive: false});
+
+camZone.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for(let i = 0; i < e.changedTouches.length; i++) {
+    const t = e.changedTouches[i];
+    if(t.identifier === touchCam.id) {
+      const dx = t.clientX - touchCam.lastX;
+      const dy = t.clientY - touchCam.lastY;
+      camera.rotation.y -= dx * 0.005;
+      camera.rotation.x -= dy * 0.005;
+      camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
+      touchCam.lastX = t.clientX;
+      touchCam.lastY = t.clientY;
+      break;
+    }
+  }
+}, {passive: false});
+
+camZone.addEventListener('touchend', e => {
+  e.preventDefault();
+  for(let i = 0; i < e.changedTouches.length; i++) {
+    if(e.changedTouches[i].identifier === touchCam.id) {
+      touchCam.active = false;
+      break;
+    }
+  }
+}, {passive: false});
+
+// Botón de acción
+actionBtn.addEventListener('touchstart', e => {
+  e.preventDefault();
+  touchAction = true;
+  actionBtn.style.transform = 'scale(0.92)';
+  if(game.state === 'playing') tryClaimPlayer();
+}, {passive: false});
+
+actionBtn.addEventListener('touchend', e => {
+  e.preventDefault();
+  touchAction = false;
+  actionBtn.style.transform = 'scale(1)';
+}, {passive: false});
+
+// También click para testing en desktop con botón
+actionBtn.addEventListener('mousedown', () => {
+  if(game.state === 'playing') tryClaimPlayer();
 });
 
 // ==========================================
@@ -629,6 +866,12 @@ const game = {
     if(pc) claimTile(pc.x, pc.z, 'player', true);
     
     document.getElementById('overlayEnd').classList.remove('visible');
+    
+    // En móvil, asegurar que el blocker se oculta al reiniciar
+    if(isTouchDevice) {
+      blocker.style.display = 'none';
+      isLocked = true;
+    }
   },
   
   lastTime: 0,
@@ -636,7 +879,7 @@ const game = {
     const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05);
     this.lastTime = timestamp;
     
-    if(this.state === 'playing' && isLocked) {
+    if(this.state === 'playing') {
       this.update(dt);
     }
     this.render();
@@ -653,6 +896,8 @@ const game = {
     if(this.playerBomb > 0 && this.playerBomb < 100) this.playerBomb -= dt;
     
     const speed = (this.playerSpeedBoost > 0 ? CFG.PLAYER_SPEED * 1.8 : CFG.PLAYER_SPEED);
+    
+    // Movimiento PC
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
     forward.y = 0;
@@ -661,10 +906,19 @@ const game = {
     right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
     
     const move = new THREE.Vector3();
-    if(keys['KeyW'] || keys['ArrowUp']) move.add(forward);
-    if(keys['KeyS'] || keys['ArrowDown']) move.sub(forward);
-    if(keys['KeyD'] || keys['ArrowRight']) move.add(right);
-    if(keys['KeyA'] || keys['ArrowLeft']) move.sub(right);
+    
+    if(!isTouchDevice) {
+      if(keys['KeyW'] || keys['ArrowUp']) move.add(forward);
+      if(keys['KeyS'] || keys['ArrowDown']) move.sub(forward);
+      if(keys['KeyD'] || keys['ArrowRight']) move.add(right);
+      if(keys['KeyA'] || keys['ArrowLeft']) move.sub(right);
+    } else {
+      // Movimiento joystick táctil
+      if(touchJoystick.active) {
+        move.add(forward.clone().multiplyScalar(-touchJoystick.dy));
+        move.add(right.clone().multiplyScalar(touchJoystick.dx));
+      }
+    }
     
     if(move.length() > 0) {
       move.normalize().multiplyScalar(speed * dt);
@@ -677,6 +931,7 @@ const game = {
     
     playerLight.position.copy(camera.position);
     
+    // Reclamar automático al caminar (tile bajo pies)
     const idx = getTileIdx(camera.position.x, camera.position.z);
     if(idx && this.playerClaimCd <= 0) {
       const claimed = claimTile(idx.x, idx.z, 'player');
@@ -722,18 +977,20 @@ const game = {
     if(this.playerScore > botTotal) {
       title.textContent = '¡VICTORIA! 🎉';
       title.style.color = '#e94560';
-      text.textContent = `Dominaste el territorio: ${this.playerScore} vs ${botTotal}`;
+      text.textContent = `Dominaste: ${this.playerScore} vs ${botTotal}`;
     } else if(this.playerScore < botTotal) {
       title.textContent = 'DERROTA';
       title.style.color = '#e74c3c';
-      text.textContent = `Los bots conquistaron: ${botTotal} vs ${this.playerScore}`;
+      text.textContent = `Bots ganan: ${botTotal} vs ${this.playerScore}`;
     } else {
       title.textContent = 'EMPATE';
       title.style.color = '#f39c12';
-      text.textContent = `${this.playerScore} a ${botTotal}. ¿Otra ronda?`;
+      text.textContent = `${this.playerScore} a ${botTotal}`;
     }
     
-    document.exitPointerLock();
+    if(!isTouchDevice) document.exitPointerLock();
+    isLocked = false;
+    blocker.style.display = 'flex';
     document.getElementById('overlayEnd').classList.add('visible');
   }
 };
@@ -748,3 +1005,4 @@ game.init();
 </script>
 </body>
 </html>
+
