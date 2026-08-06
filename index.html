@@ -575,4 +575,436 @@ class Bot {
       for (let dz = -3; dz <= 3; dz++) {
         for (let dx = -3; dx <= 3; dx++) {
           const nx = this.tx + dx, nz = this.tz + dz;
-          if (nx >= 0 && nx < CFG.GRID 
+          if (nx >= 0 && nx < CFG.GRID && nz >= 0 && nz < CFG.GRID) {
+            if (tiles[nz][nx].owner !== this.id) candidates.push({ x: nx, z: nz });
+          }
+        }
+      }
+      if (candidates.length) {
+        const c = candidates[Math.floor(Math.random() * candidates.length)];
+        this.targetX = c.x; this.targetZ = c.z;
+      }
+    }
+
+    const tx = this.targetX * CFG.TILE + CFG.TILE / 2 - WH;
+    const tz = this.targetZ * CFG.TILE + CFG.TILE / 2 - WH;
+    const dx = tx - this.mesh.position.x;
+    const dz = tz - this.mesh.position.z;
+    const d = Math.hypot(dx, dz);
+
+    if (d > 0.35) {
+      this.mesh.position.x += (dx / d) * this.speed * dt;
+      this.mesh.position.z += (dz / d) * this.speed * dt;
+    } else {
+      this.tx = this.targetX; this.tz = this.targetZ;
+      if (this.claimCd <= 0) {
+        const claimed = claimTile(this.tx, this.tz, this.id);
+        if (claimed && this.bomb > 0) {
+          for (let oz = -1; oz <= 1; oz++)
+            for (let ox = -1; ox <= 1; ox++)
+              if (ox || oz) claimTile(this.tx + ox, this.tz + oz, this.id, true);
+          this.bomb = 0;
+        }
+        this.claimCd = CFG.CLAIM_CD * 2.2;
+      }
+      this.thinkT = 0;
+    }
+
+    this.light.position.copy(this.mesh.position);
+    this.light.position.y += 1.2;
+  }
+}
+
+// =====================================================
+//  POWER-UPS
+// =====================================================
+const powerups = [];
+const pupGeo = new THREE.SphereGeometry(0.55, 12, 12);
+
+function spawnPowerup() {
+  if (powerups.length >= 4) return;
+  const x = 2 + Math.floor(Math.random() * (CFG.GRID - 4));
+  const z = 2 + Math.floor(Math.random() * (CFG.GRID - 4));
+  const types = ['speed', 'shield', 'bomb'];
+  const type = types[Math.floor(Math.random() * 3)];
+  const color = CFG.COLORS['powerup' + type.charAt(0).toUpperCase() + type.slice(1)];
+
+  const mat = new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: 0.7 });
+  const mesh = new THREE.Mesh(pupGeo, mat);
+  mesh.position.set(x * CFG.TILE + CFG.TILE / 2 - WH, 1.4, z * CFG.TILE + CFG.TILE / 2 - WH);
+  scene.add(mesh);
+
+  const glow = new THREE.PointLight(color, 0.8, 8);
+  glow.position.copy(mesh.position);
+  scene.add(glow);
+
+  powerups.push({ mesh, glow, type, life: 14, angle: Math.random() * 6 });
+}
+
+function updatePowerups(dt) {
+  for (let i = powerups.length - 1; i >= 0; i--) {
+    const p = powerups[i];
+    p.life -= dt;
+    p.angle += dt * 2.5;
+    p.mesh.position.y = 1.4 + Math.sin(p.angle) * 0.28;
+    p.mesh.rotation.y += dt * 2;
+    p.mesh.rotation.x = Math.sin(p.angle * 0.7) * 0.3;
+    p.glow.position.copy(p.mesh.position);
+
+    if (Math.hypot(camera.position.x - p.mesh.position.x, camera.position.z - p.mesh.position.z) < 1.9) {
+      applyPowerup('player', p.type);
+      removePowerup(i);
+      continue;
+    }
+    for (const b of game.bots) {
+      if (Math.hypot(b.mesh.position.x - p.mesh.position.x, b.mesh.position.z - p.mesh.position.z) < 1.9) {
+        applyPowerup(b.id, p.type);
+        removePowerup(i);
+        break;
+      }
+    }
+    if (p.life <= 0) removePowerup(i);
+  }
+}
+
+function removePowerup(i) {
+  const p = powerups[i];
+  scene.remove(p.mesh); scene.remove(p.glow);
+  powerups.splice(i, 1);
+}
+
+function applyPowerup(target, type) {
+  if (target === 'player') {
+    if (type === 'speed') game.playerSpeedBoost = CFG.POWERUP_DURATION;
+    if (type === 'shield') game.playerShield = CFG.POWERUP_DURATION;
+    if (type === 'bomb') game.playerBomb = CFG.POWERUP_DURATION;
+  } else {
+    const b = game.bots.find(bo => bo.id === target);
+    if (!b) return;
+    if (type === 'speed') {
+      b.speed = CFG.BOT_SPEED * 2.1;
+      setTimeout(() => { if (b) b.speed = CFG.BOT_SPEED; }, CFG.POWERUP_DURATION * 1000);
+    }
+    if (type === 'shield') b.shield = CFG.POWERUP_DURATION;
+    if (type === 'bomb') b.bomb = CFG.POWERUP_DURATION;
+  }
+}
+
+// =====================================================
+//  INPUT
+// =====================================================
+const keys = {};
+let isLocked = false;
+
+document.addEventListener('keydown', e => keys[e.code] = true);
+document.addEventListener('keyup', e => keys[e.code] = false);
+
+const blocker = document.getElementById('blocker');
+const btnStart = document.getElementById('btnStart');
+const btnRestart = document.getElementById('btnRestart');
+
+function startGame() {
+  if (!isTouch) {
+    renderer.domElement.requestPointerLock();
+  } else {
+    isLocked = true;
+    blocker.style.display = 'none';
+    if (game.state === 'menu' || game.state === 'ended') game.startPlaying();
+  }
+}
+
+btnStart.addEventListener('click', startGame);
+btnRestart.addEventListener('click', () => {
+  game.restart();
+  startGame();
+});
+
+document.addEventListener('pointerlockchange', () => {
+  isLocked = document.pointerLockElement === renderer.domElement;
+  if (isLocked) {
+    blocker.style.display = 'none';
+    if (game.state === 'menu' || game.state === 'ended') game.startPlaying();
+  } else if (game.state === 'playing') {
+    blocker.style.display = 'flex';
+  }
+});
+
+document.addEventListener('mousemove', e => {
+  if (!isLocked || isTouch) return;
+  camera.rotation.y -= e.movementX * 0.0022;
+  camera.rotation.x -= e.movementY * 0.0022;
+  camera.rotation.x = Math.max(-1.35, Math.min(1.35, camera.rotation.x));
+});
+
+document.addEventListener('mousedown', () => {
+  if (!isLocked || isTouch || game.state !== 'playing') return;
+  tryClaimPlayer();
+});
+
+function tryClaimPlayer() {
+  if (game.playerClaimCd > 0) return;
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0.15);
+  const target = new THREE.Vector3();
+  if (raycaster.ray.intersectPlane(plane, target)) {
+    const idx = getTileIdx(target.x, target.z);
+    if (idx) {
+      const claimed = claimTile(idx.x, idx.z, 'player');
+      if (claimed) {
+        game.playerClaimCd = CFG.CLAIM_CD;
+        if (game.playerBomb > 0) {
+          for (let oz = -1; oz <= 1; oz++)
+            for (let ox = -1; ox <= 1; ox++)
+              if (ox || oz) claimTile(idx.x + ox, idx.z + oz, 'player', true);
+          game.playerBomb = 0;
+        }
+      }
+    }
+  }
+}
+
+// Touch
+let joy = { active: false, id: null, sx: 0, sy: 0, dx: 0, dy: 0 };
+let camT = { active: false, id: null, lx: 0, ly: 0 };
+
+const joyZone = document.getElementById('joystickZone');
+const joyThumb = document.getElementById('joystickThumb');
+const camZone = document.getElementById('camZone');
+const actionBtn = document.getElementById('actionBtn');
+
+joyZone.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  joy.active = true; joy.id = t.identifier;
+  const r = joyZone.getBoundingClientRect();
+  joy.sx = r.left + r.width / 2; joy.sy = r.top + r.height / 2;
+  updateJoy(t.clientX, t.clientY);
+}, { passive: false });
+
+joyZone.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) if (t.identifier === joy.id) updateJoy(t.clientX, t.clientY);
+}, { passive: false });
+
+joyZone.addEventListener('touchend', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) if (t.identifier === joy.id) {
+    joy.active = false; joy.dx = joy.dy = 0;
+    joyThumb.style.transform = 'translate(-50%,-50%)';
+  }
+}, { passive: false });
+
+function updateJoy(cx, cy) {
+  const max = 38;
+  let dx = cx - joy.sx, dy = cy - joy.sy;
+  const d = Math.hypot(dx, dy);
+  if (d > max) { dx = dx / d * max; dy = dy / d * max; }
+  joy.dx = dx / max; joy.dy = dy / max;
+  joyThumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+}
+
+camZone.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  camT.active = true; camT.id = t.identifier; camT.lx = t.clientX; camT.ly = t.clientY;
+}, { passive: false });
+
+camZone.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) if (t.identifier === camT.id) {
+    camera.rotation.y -= (t.clientX - camT.lx) * 0.0055;
+    camera.rotation.x -= (t.clientY - camT.ly) * 0.0055;
+    camera.rotation.x = Math.max(-1.35, Math.min(1.35, camera.rotation.x));
+    camT.lx = t.clientX; camT.ly = t.clientY;
+  }
+}, { passive: false });
+
+camZone.addEventListener('touchend', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) if (t.identifier === camT.id) camT.active = false;
+}, { passive: false });
+
+actionBtn.addEventListener('touchstart', e => {
+  e.preventDefault();
+  actionBtn.style.transform = 'scale(0.92)';
+  if (game.state === 'playing') tryClaimPlayer();
+}, { passive: false });
+actionBtn.addEventListener('touchend', e => {
+  e.preventDefault();
+  actionBtn.style.transform = 'scale(1)';
+}, { passive: false });
+
+// =====================================================
+//  GAME
+// =====================================================
+const game = {
+  state: 'menu',
+  playerScore: 0,
+  playerSpeedBoost: 0,
+  playerShield: 0,
+  playerBomb: 0,
+  playerClaimCd: 0,
+  bots: [],
+  timeLeft: CFG.ROUND_TIME,
+  pupTimer: 4,
+
+  init() {
+    createGrid();
+    this.resetWorld();
+    requestAnimationFrame(t => this.loop(t));
+  },
+
+  resetWorld() {
+    for (const b of this.bots) {
+      scene.remove(b.mesh);
+      scene.remove(b.light);
+    }
+    this.bots = [];
+    while (powerups.length) removePowerup(0);
+
+    for (let z = 0; z < CFG.GRID; z++)
+      for (let x = 0; x < CFG.GRID; x++) {
+        tiles[z][x].owner = null;
+        tiles[z][x].mesh.material.color.setHex(CFG.COLORS.neutral);
+        tiles[z][x].mesh.material.emissive.setHex(CFG.COLORS.neutral);
+        tiles[z][x].mesh.material.emissiveIntensity = 0.08;
+        tiles[z][x].mesh.position.y = -0.15;
+        tiles[z][x].mesh.scale.set(1, 1, 1);
+      }
+
+    camera.position.set(0, 2.2, 0);
+    camera.rotation.set(0, 0, 0);
+    this.playerScore = 0;
+    this.playerSpeedBoost = this.playerShield = this.playerBomb = 0;
+    this.playerClaimCd = 0;
+    this.timeLeft = CFG.ROUND_TIME;
+    this.pupTimer = 3;
+
+    for (let i = 0; i < CFG.BOT_COUNT; i++) {
+      this.bots.push(new Bot('bot' + i, CFG.COLORS.bot[i], i));
+    }
+
+    const pc = getTileIdx(0, 0);
+    if (pc) claimTile(pc.x, pc.z, 'player', true);
+  },
+
+  startPlaying() {
+    this.state = 'playing';
+    document.getElementById('overlayEnd').classList.remove('visible');
+    this.updateHUD();
+  },
+
+  restart() {
+    this.resetWorld();
+    document.getElementById('overlayEnd').classList.remove('visible');
+    this.state = 'menu';
+  },
+
+  lastTime: 0,
+  loop(ts) {
+    const dt = Math.min((ts - this.lastTime) / 1000, 0.05);
+    this.lastTime = ts;
+    if (this.state === 'playing') this.update(dt);
+    renderer.render(scene, camera);
+    requestAnimationFrame(t => this.loop(t));
+  },
+
+  update(dt) {
+    this.timeLeft -= dt;
+    if (this.timeLeft <= 0) { this.timeLeft = 0; this.endGame(); return; }
+
+    this.playerClaimCd = Math.max(0, this.playerClaimCd - dt);
+    this.playerSpeedBoost = Math.max(0, this.playerSpeedBoost - dt);
+    this.playerShield = Math.max(0, this.playerShield - dt);
+    this.playerBomb = Math.max(0, this.playerBomb - dt);
+
+    const speed = this.playerSpeedBoost > 0 ? CFG.PLAYER_SPEED * 1.85 : CFG.PLAYER_SPEED;
+
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    forward.y = 0; forward.normalize();
+    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    const move = new THREE.Vector3();
+
+    if (!isTouch) {
+      if (keys['KeyW'] || keys['ArrowUp']) move.add(forward);
+      if (keys['KeyS'] || keys['ArrowDown']) move.sub(forward);
+      if (keys['KeyD'] || keys['ArrowRight']) move.add(right);
+      if (keys['KeyA'] || keys['ArrowLeft']) move.sub(right);
+    } else if (joy.active) {
+      move.add(forward.clone().multiplyScalar(-joy.dy));
+      move.add(right.clone().multiplyScalar(joy.dx));
+    }
+
+    if (move.lengthSq() > 0) {
+      move.normalize().multiplyScalar(speed * dt);
+      camera.position.add(move);
+    }
+
+    const lim = WH - 1.2;
+    camera.position.x = Math.max(-lim, Math.min(lim, camera.position.x));
+    camera.position.z = Math.max(-lim, Math.min(lim, camera.position.z));
+    playerLight.position.copy(camera.position);
+
+    const idx = getTileIdx(camera.position.x, camera.position.z);
+    if (idx && this.playerClaimCd <= 0) {
+      if (claimTile(idx.x, idx.z, 'player')) this.playerClaimCd = CFG.CLAIM_CD;
+    }
+
+    for (const b of this.bots) b.update(dt);
+
+    this.pupTimer -= dt;
+    if (this.pupTimer <= 0) {
+      spawnPowerup();
+      this.pupTimer = CFG.POWERUP_SPAWN + Math.random() * 2;
+    }
+    updatePowerups(dt);
+    this.updateHUD();
+  },
+
+  updateHUD() {
+    const m = Math.floor(this.timeLeft / 60);
+    const s = Math.floor(this.timeLeft % 60);
+    document.getElementById('hudTime').textContent = m + ':' + s.toString().padStart(2, '0');
+    document.getElementById('hudPlayer').textContent = this.playerScore;
+    document.getElementById('hudBot').textContent = this.bots.reduce((a, b) => a + b.score, 0);
+    document.getElementById('pupSpeed').classList.toggle('active', this.playerSpeedBoost > 0);
+    document.getElementById('pupShield').classList.toggle('active', this.playerShield > 0);
+    document.getElementById('pupBomb').classList.toggle('active', this.playerBomb > 0);
+  },
+
+  endGame() {
+    this.state = 'ended';
+    const botTotal = this.bots.reduce((a, b) => a + b.score, 0);
+    const title = document.getElementById('endTitle');
+    const text = document.getElementById('endText');
+    if (this.playerScore > botTotal) {
+      title.textContent = '¡VICTORIA! 🎉';
+      title.style.color = '#ff4d6d';
+      text.textContent = `Dominaste el mapa: ${this.playerScore} vs ${botTotal}`;
+    } else if (this.playerScore < botTotal) {
+      title.textContent = 'DERROTA';
+      title.style.color = '#f87171';
+      text.textContent = `Los rivales ganan: ${botTotal} vs ${this.playerScore}`;
+    } else {
+      title.textContent = 'EMPATE';
+      title.style.color = '#fbbf24';
+      text.textContent = `${this.playerScore} a ${botTotal}`;
+    }
+    if (!isTouch) document.exitPointerLock();
+    isLocked = false;
+    document.getElementById('overlayEnd').classList.add('visible');
+  }
+};
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+game.init();
+</script>
+</body>
+</html>
