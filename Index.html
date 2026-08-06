@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claim.io 3D — First Person Territory</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #020205;
+    color: #fff;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+  
+  #blocker {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(2, 2, 8, 0.92);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  #blocker h1 {
+    font-size: 64px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #e94560, #ff6b81);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+    letter-spacing: -2px;
+  }
+  #blocker p {
+    font-size: 18px;
+    color: #889;
+    margin-bottom: 30px;
+  }
+  #blocker .key {
+    display: inline-block;
+    background: #1a1a2e;
+    border: 1px solid #334;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-family: monospace;
+    color: #e94560;
+    margin: 0 4px;
+  }
+  #blocker button {
+    padding: 16px 48px;
+    font-size: 20px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e94560, #c73e54);
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 30px rgba(233, 69, 96, 0.4);
+  }
+  #blocker button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px rgba(233, 69, 96, 0.6);
+  }
+  
+  #hud {
+    position: absolute;
+    top: 0; left: 0; width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 30px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .hud-box {
+    background: rgba(10, 10, 20, 0.7);
+    border: 1px solid rgba(233, 69, 96, 0.3);
+    border-radius: 10px;
+    padding: 10px 20px;
+    backdrop-filter: blur(4px);
+  }
+  .hud-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #778; }
+  .hud-value { font-size: 28px; font-weight: 800; }
+  #hudTime { color: #f39c12; }
+  #hudPlayer { color: #e94560; }
+  #hudBot { color: #2ecc71; }
+  
+  #crosshair {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 20px; height: 20px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 5;
+  }
+  #crosshair::before, #crosshair::after {
+    content: '';
+    position: absolute;
+    background: rgba(255,255,255,0.8);
+  }
+  #crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
+  #crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
+  
+  #powerupBar {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .pup {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.3s;
+    border: 1px solid;
+  }
+  .pup.active { opacity: 1; }
+  .pup-speed { background: rgba(52,152,219,0.2); color: #3498db; border-color: #3498db; }
+  .pup-shield { background: rgba(155,89,182,0.2); color: #9b59b6; border-color: #9b59b6; }
+  .pup-bomb { background: rgba(231,76,60,0.2); color: #e74c3c; border-color: #e74c3c; }
+  
+  #overlayEnd {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(2, 2, 8, 0.93);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+  }
+  #overlayEnd.visible { display: flex; }
+  #overlayEnd h2 { font-size: 52px; margin-bottom: 10px; }
+  #overlayEnd p { font-size: 20px; color: #889; margin-bottom: 30px; }
+  #overlayEnd button {
+    padding: 14px 40px;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    background: #e94560;
+    color: #fff;
+    cursor: pointer;
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+<div id="blocker">
+  <h1>CLAIM.IO 3D</h1>
+  <p>Reclama territorio. Roba al enemigo. Domina el mapa.</p>
+  <p style="margin-bottom:8px;"><span class="key">WASD</span> Moverse · <span class="key">MOUSE</span> Mirar · <span class="key">CLICK</span> Reclamar/Atacar</p>
+  <p style="margin-bottom:30px; font-size:14px; color:#556;">Pasa por encima de los tiles para pintarlos. Recoge power-ups brillantes.</p>
+  <button id="btnStart">► CLICK PARA JUGAR</button>
+</div>
+
+<div id="hud">
+  <div class="hud-box">
+    <div class="hud-label">Tiempo</div>
+    <div class="hud-value" id="hudTime">2:00</div>
+  </div>
+  <div style="display:flex; gap:12px;">
+    <div class="hud-box">
+      <div class="hud-label">Tú</div>
+      <div class="hud-value" id="hudPlayer">0</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-label">Bot</div>
+      <div class="hud-value" id="hudBot">0</div>
+    </div>
+  </div>
+</div>
+
+<div id="crosshair"></div>
+
+<div id="powerupBar">
+  <div class="pup pup-speed" id="pupSpeed">⚡ Velocidad</div>
+  <div class="pup pup-shield" id="pupShield">🛡 Escudo</div>
+  <div class="pup pup-bomb" id="pupBomb">💣 Bomba</div>
+</div>
+
+<div id="overlayEnd">
+  <h2 id="endTitle">¡Ronda terminada!</h2>
+  <p id="endText">Resultado</p>
+  <button onclick="game.restart()">Jugar otra vez</button>
+</div>
+
+<script>
+  // ==========================================
+//  CONFIGURACIÓN
+// ==========================================
+const CFG = {
+  GRID: 24,
+  TILE: 5,
+  PLAYER_SPEED: 18,
+  BOT_SPEED: 9,
+  BOT_COUNT: 3,
+  ROUND_TIME: 120,
+  CLAIM_CD: 0.15,
+  POWERUP_SPAWN: 6,
+  POWERUP_DURATION: 8,
+  COLORS: {
+    neutral: 0x151525,
+    player: 0xe94560,
+    bot: [0x2ecc71, 0xf39c12, 0x9b59b6],
+    powerupSpeed: 0x3498db,
+    powerupShield: 0x9b59b6,
+    powerupBomb: 0xe74c3c
+  }
+};
+const WORLD = CFG.GRID * CFG.TILE;
+const WH = WORLD / 2;
+
+// ==========================================
+//  THREE.JS SETUP
+// ==========================================
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x020205);
+scene.fog = new THREE.Fog(0x020205, 30, 90);
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 2.5, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+// Iluminación
+const ambient = new THREE.AmbientLight(0x303050, 0.6);
+scene.add(ambient);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
+dirLight.position.set(40, 80, 40);
+dirLight.castShadow = true;
+dirLight.shadow.camera.left = -60;
+dirLight.shadow.camera.right = 60;
+dirLight.shadow.camera.top = 60;
+dirLight.shadow.camera.bottom = -60;
+scene.add(dirLight);
+
+// Luz del jugador
+const playerLight = new THREE.PointLight(CFG.COLORS.player, 1.2, 25);
+scene.add(playerLight);
+
+// ==========================================
+//  GRID DE TILES
+// ==========================================
+const tileGeo = new THREE.BoxGeometry(CFG.TILE, 0.4, CFG.TILE);
+const tiles = [];
+
+function createGrid() {
+  for(let z = 0; z < CFG.GRID; z++) {
+    const row = [];
+    for(let x = 0; x < CFG.GRID; x++) {
+      const mat = new THREE.MeshLambertMaterial({ 
+        color: CFG.COLORS.neutral,
+        emissive: CFG.COLORS.neutral,
+        emissiveIntensity: 0.1
+      });
+      const mesh = new THREE.Mesh(tileGeo, mat);
+      mesh.position.set(
+        x * CFG.TILE + CFG.TILE/2 - WH,
+        -0.2,
+        z * CFG.TILE + CFG.TILE/2 - WH
+      );
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      row.push({ mesh, owner: null, lastClaim: 0 });
+    }
+    tiles.push(row);
+  }
+}
+
+function getTileIdx(px, pz) {
+  const x = Math.floor((px + WH) / CFG.TILE);
+  const z = Math.floor((pz + WH) / CFG.TILE);
+  if(x < 0 || x >= CFG.GRID || z < 0 || z >= CFG.GRID) return null;
+  return { x, z };
+}
+
+function isAdjacentTo(x, z, owner) {
+  for(let dz = -1; dz <= 1; dz++) {
+    for(let dx = -1; dx <= 1; dx++) {
+      if(dx === 0 && dz === 0) continue;
+      const nx = x + dx, nz = z + dz;
+      if(nx >= 0 && nx < CFG.GRID && nz >= 0 && nz < CFG.GRID) {
+        if(tiles[nz][nx].owner === owner) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function claimTile(x, z, owner, force = false) {
+  const t = tiles[z][x];
+  if(t.owner === owner) return false;
+  
+  if(!force && t.owner !== null) {
+    const hasTiles = owner === 'player' ? game.playerScore > 0 : true;
+    if(hasTiles && !isAdjacentTo(x, z, owner)) return false;
+  }
+  
+  if(t.owner && t.owner !== owner) {
+    const victim = t.owner === 'player' ? game.player : game.bots.find(b => b.id === t.owner);
+    if(victim && victim.shield > 0) return false;
+  }
+  
+  if(t.owner === 'player') game.playerScore--;
+  else if(t.owner && t.owner.startsWith('bot')) {
+    const b = game.bots.find(bo => bo.id === t.owner);
+    if(b) b.score--;
+  }
+  
+  t.owner = owner;
+  const color = owner === 'player' ? CFG.COLORS.player : CFG.COLORS.bot[owner === 'bot0' ? 0 : owner === 'bot1' ? 1 : 2];
+  t.mesh.material.color.setHex(color);
+  t.mesh.material.emissive.setHex(color);
+  t.mesh.material.emissiveIntensity = 0.4;
+  
+  t.mesh.position.y = 0.1;
+  setTimeout(() => { t.mesh.position.y = -0.2; }, 100);
+  
+  if(owner === 'player') game.playerScore++;
+  else { const b = game.bots.find(bo => bo.id === owner); if(b) b.score++; }
+  
+  return true;
+}
+// ==========================================
+//  BOTS
+// ==========================================
+class Bot {
+  constructor(id, colorHex) {
+    this.id = id;
+    this.score = 0;
+    this.shield = 0;
+    this.speed = CFG.BOT_SPEED;
+    this.claimCd = 0;
+    
+    const geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+    const mat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.3 });
+    this.mesh = new THREE.Mesh(geo, mat);
+    this.mesh.castShadow = true;
+    
+    let sx, sz;
+    do {
+      sx = Math.floor(Math.random() * CFG.GRID);
+      sz = Math.floor(Math.random() * CFG.GRID);
+    } while(Math.abs(sx - CFG.GRID/2) < 4 && Math.abs(sz - CFG.GRID/2) < 4);
+    
+    this.mesh.position.set(
+      sx * CFG.TILE + CFG.TILE/2 - WH,
+      1,
+      sz * CFG.TILE + CFG.TILE/2 - WH
+    );
+    scene.add(this.mesh);
+    
+    this.light = new THREE.PointLight(colorHex, 0.8, 15);
+    scene.add(this.light);
+    
+    this.tx = sx; this.tz = sz;
+    this.targetX = sx; this.targetZ = sz;
+    this.thinkT = 0;
+    
+    claimTile(sx, sz, this.id, true);
+  }
+  
+  update(dt) {
+    this.claimCd -= dt;
+    this.shield -= dt;
+    this.thinkT -= dt;
+    
+    if(this.thinkT <= 0) {
+      this.thinkT = Math.random() * 1.5 + 0.5;
+      const candidates = [];
+      for(let dz = -2; dz <= 2; dz++) {
+        for(let dx = -2; dx <= 2; dx++) {
+          const nx = this.tx + dx, nz = this.tz + dz;
+          if(nx >= 0 && nx < CFG.GRID && nz >= 0 && nz < CFG.GRID) {
+            if(tiles[nz][nx].owner !== this.id) candidates.push({x:nx, z:nz});
+          }
+        }
+      }
+      if(candidates.length > 0) {
+        const c = candidates[Math.floor(Math.random() * candidates.length)];
+        this.targetX = c.x; this.targetZ = c.z;
+      }
+    }
+    
+    const tx = this.targetX * CFG.TILE + CFG.TILE/2 - WH;
+    const tz = this.targetZ * CFG.TILE + CFG.TILE/2 - WH;
+    const dx = tx - this.mesh.position.x;
+    const dz = tz - this.mesh.position.z;
+    const d = Math.hypot(dx, dz);
+    
+    if(d > 0.3) {
+      this.mesh.position.x += (dx/d) * this.speed * dt;
+      this.mesh.position.z += (dz/d) * this.speed * dt;
+      this.mesh.rotation.y += dt * 2;
+    } else {
+      this.tx = this.targetX; this.tz = this.targetZ;
+      if(this.claimCd <= 0) {
+        claimTile(this.tx, this.tz, this.id);
+        this.claimCd = CFG.CLAIM_CD * 2;
+      }
+      this.thinkT = 0;
+    }
+    
+    this.light.position.copy(this.mesh.position);
+  }
+}
+
+// ==========================================
+//  POWER-UPS
+// ==========================================
+const powerups = [];
+const pupGeo = new THREE.SphereGeometry(0.6, 16, 16);
+
+function spawnPowerup() {
+  if(powerups.length >= 4) return;
+  const x = Math.floor(Math.random() * (CFG.GRID - 4)) + 2;
+  const z = Math.floor(Math.random() * (CFG.GRID - 4)) + 2;
+  const types = ['speed', 'shield', 'bomb'];
+  const type = types[Math.floor(Math.random() * types.length)];
+  const color = CFG.COLORS[`powerup${type.charAt(0).toUpperCase() + type.slice(1)}`];
+  
+  const mat = new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: 0.6 });
+  const mesh = new THREE.Mesh(pupGeo, mat);
+  mesh.position.set(
+    x * CFG.TILE + CFG.TILE/2 - WH,
+    1.5,
+    z * CFG.TILE + CFG.TILE/2 - WH
+  );
+  scene.add(mesh);
+  
+  const particles = [];
+  for(let i = 0; i < 3; i++) {
+    const p = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 0.15, 0.15),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    scene.add(p);
+    particles.push({ mesh: p, angle: i * (Math.PI*2/3), radius: 1.2 });
+  }
+  
+  powerups.push({ mesh, type, particles, life: 15, angle: 0 });
+}
+
+function updatePowerups(dt) {
+  for(let i = powerups.length - 1; i >= 0; i--) {
+    const p = powerups[i];
+    p.life -= dt;
+    p.angle += dt * 2;
+    p.mesh.position.y = 1.5 + Math.sin(p.angle) * 0.3;
+    p.mesh.rotation.y += dt * 3;
+    
+    for(const part of p.particles) {
+      part.angle += dt * 3;
+      part.mesh.position.x = p.mesh.position.x + Math.cos(part.angle) * part.radius;
+      part.mesh.position.z = p.mesh.position.z + Math.sin(part.angle) * part.radius;
+      part.mesh.position.y = p.mesh.position.y;
+      part.mesh.rotation.x += dt * 4;
+    }
+    
+    const d = Math.hypot(camera.position.x - p.mesh.position.x, camera.position.z - p.mesh.position.z);
+    if(d < 2) {
+      applyPowerup('player', p.type);
+      removePowerup(i);
+      continue;
+    }
+    for(const b of game.bots) {
+      const db = Math.hypot(b.mesh.position.x - p.mesh.position.x, b.mesh.position.z - p.mesh.position.z);
+      if(db < 2) {
+        applyPowerup(b.id, p.type);
+        removePowerup(i);
+        break;
+      }
+    }
+    
+    if(p.life <= 0) removePowerup(i);
+  }
+}
+
+function removePowerup(i) {
+  const p = powerups[i];
+  scene.remove(p.mesh);
+  for(const part of p.particles) scene.remove(part.mesh);
+  powerups.splice(i, 1);
+}
+
+function applyPowerup(target, type) {
+  if(target === 'player') {
+    if(type === 'speed') game.playerSpeedBoost = CFG.POWERUP_DURATION;
+    if(type === 'shield') game.playerShield = CFG.POWERUP_DURATION;
+    if(type === 'bomb') game.playerBomb = CFG.POWERUP_DURATION;
+  } else {
+    const b = game.bots.find(bo => bo.id === target);
+    if(b) {
+      if(type === 'speed') b.speed = CFG.BOT_SPEED * 2;
+      if(type === 'shield') b.shield = CFG.POWERUP_DURATION;
+      if(type === 'bomb') b.speed = CFG.BOT_SPEED * 2;
+    }
+  }
+  }
+ // ==========================================
+//  INPUT & MOVIMIENTO FPS
+// ==========================================
+const keys = {};
+let isLocked = false;
+
+document.addEventListener('keydown', e => keys[e.code] = true);
+document.addEventListener('keyup', e => keys[e.code] = false);
+
+const blocker = document.getElementById('blocker');
+const btnStart = document.getElementById('btnStart');
+
+btnStart.addEventListener('click', () => {
+  renderer.domElement.requestPointerLock();
+});
+
+document.addEventListener('pointerlockchange', () => {
+  isLocked = document.pointerLockElement === renderer.domElement;
+  blocker.style.display = isLocked ? 'none' : 'flex';
+});
+
+document.addEventListener('mousemove', (e) => {
+  if(!isLocked) return;
+  camera.rotation.y -= e.movementX * 0.002;
+  camera.rotation.x -= e.movementY * 0.002;
+  camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
+});
+
+document.addEventListener('mousedown', () => {
+  if(!isLocked || game.state !== 'playing') return;
+  
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+  
+  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0.2);
+  const target = new THREE.Vector3();
+  raycaster.ray.intersectPlane(plane, target);
+  
+  if(target) {
+    const idx = getTileIdx(target.x, target.z);
+    if(idx) {
+      if(game.playerClaimCd <= 0) {
+        const claimed = claimTile(idx.x, idx.z, 'player');
+        if(claimed) game.playerClaimCd = CFG.CLAIM_CD;
+        
+        if(claimed && game.playerBomb > 0) {
+          for(let dz = -1; dz <= 1; dz++) {
+            for(let dx = -1; dx <= 1; dx++) {
+              claimTile(idx.x + dx, idx.z + dz, 'player');
+            }
+          }
+          game.playerBomb = 0;
+        }
+      }
+    }
+  }
+});
+
+// ==========================================
+//  GAME LOOP
+// ==========================================
+const game = {
+  state: 'menu',
+  playerScore: 0,
+  playerSpeedBoost: 0,
+  playerShield: 0,
+  playerBomb: 0,
+  playerClaimCd: 0,
+  bots: [],
+  timeLeft: CFG.ROUND_TIME,
+  pupTimer: 3,
+  
+  init() {
+    createGrid();
+    this.restart();
+    requestAnimationFrame(t => this.loop(t));
+  },
+  
+  restart() {
+    for(const b of this.bots) {
+      scene.remove(b.mesh);
+      scene.remove(b.light);
+    }
+    this.bots = [];
+    
+    while(powerups.length) removePowerup(0);
+    
+    for(let z = 0; z < CFG.GRID; z++) {
+      for(let x = 0; x < CFG.GRID; x++) {
+        tiles[z][x].owner = null;
+        tiles[z][x].mesh.material.color.setHex(CFG.COLORS.neutral);
+        tiles[z][x].mesh.material.emissive.setHex(CFG.COLORS.neutral);
+        tiles[z][x].mesh.material.emissiveIntensity = 0.1;
+      }
+    }
+    
+    camera.position.set(0, 2.5, 0);
+    camera.rotation.set(0, 0, 0);
+    this.playerScore = 0;
+    this.playerSpeedBoost = 0;
+    this.playerShield = 0;
+    this.playerBomb = 0;
+    this.timeLeft = CFG.ROUND_TIME;
+    this.pupTimer = 2;
+    this.state = 'playing';
+    
+    for(let i = 0; i < CFG.BOT_COUNT; i++) {
+      this.bots.push(new Bot(`bot${i}`, CFG.COLORS.bot[i]));
+    }
+    
+    const pc = getTileIdx(camera.position.x, camera.position.z);
+    if(pc) claimTile(pc.x, pc.z, 'player', true);
+    
+    document.getElementById('overlayEnd').classList.remove('visible');
+  },
+  
+  lastTime: 0,
+  loop(timestamp) {
+    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05);
+    this.lastTime = timestamp;
+    
+    if(this.state === 'playing' && isLocked) {
+      this.update(dt);
+    }
+    this.render();
+    requestAnimationFrame(t => this.loop(t));
+  },
+  
+  update(dt) {
+    this.timeLeft -= dt;
+    if(this.timeLeft <= 0) { this.timeLeft = 0; this.endGame(); return; }
+    
+    this.playerClaimCd -= dt;
+    this.playerSpeedBoost -= dt;
+    this.playerShield -= dt;
+    if(this.playerBomb > 0 && this.playerBomb < 100) this.playerBomb -= dt;
+    
+    const speed = (this.playerSpeedBoost > 0 ? CFG.PLAYER_SPEED * 1.8 : CFG.PLAYER_SPEED);
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    forward.y = 0;
+    forward.normalize();
+    const right = new THREE.Vector3();
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    
+    const move = new THREE.Vector3();
+    if(keys['KeyW'] || keys['ArrowUp']) move.add(forward);
+    if(keys['KeyS'] || keys['ArrowDown']) move.sub(forward);
+    if(keys['KeyD'] || keys['ArrowRight']) move.add(right);
+    if(keys['KeyA'] || keys['ArrowLeft']) move.sub(right);
+    
+    if(move.length() > 0) {
+      move.normalize().multiplyScalar(speed * dt);
+      camera.position.add(move);
+    }
+    
+    const limit = WH - 1;
+    camera.position.x = Math.max(-limit, Math.min(limit, camera.position.x));
+    camera.position.z = Math.max(-limit, Math.min(limit, camera.position.z));
+    
+    playerLight.position.copy(camera.position);
+    
+    const idx = getTileIdx(camera.position.x, camera.position.z);
+    if(idx && this.playerClaimCd <= 0) {
+      const claimed = claimTile(idx.x, idx.z, 'player');
+      if(claimed) this.playerClaimCd = CFG.CLAIM_CD;
+    }
+    
+    for(const b of this.bots) b.update(dt);
+    
+    this.pupTimer -= dt;
+    if(this.pupTimer <= 0) {
+      spawnPowerup();
+      this.pupTimer = CFG.POWERUP_SPAWN;
+    }
+    updatePowerups(dt);
+    
+    this.updateHUD();
+  },
+  
+  render() {
+    renderer.render(scene, camera);
+  },
+  
+  updateHUD() {
+    const m = Math.floor(this.timeLeft / 60);
+    const s = Math.floor(this.timeLeft % 60);
+    document.getElementById('hudTime').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    document.getElementById('hudPlayer').textContent = this.playerScore;
+    
+    const botTotal = this.bots.reduce((a, b) => a + b.score, 0);
+    document.getElementById('hudBot').textContent = botTotal;
+    
+    document.getElementById('pupSpeed').classList.toggle('active', this.playerSpeedBoost > 0);
+    document.getElementById('pupShield').classList.toggle('active', this.playerShield > 0);
+    document.getElementById('pupBomb').classList.toggle('active', this.playerBomb > 0);
+  },
+  
+  endGame() {
+    this.state = 'ended';
+    const botTotal = this.bots.reduce((a, b) => a + b.score, 0);
+    const title = document.getElementById('endTitle');
+    const text = document.getElementById('endText');
+    
+    if(this.playerScore > botTotal) {
+      title.textContent = '¡VICTORIA! 🎉';
+      title.style.color = '#e94560';
+      text.textContent = `Dominaste el territorio: ${this.playerScore} vs ${botTotal}`;
+    } else if(this.playerScore < botTotal) {
+      title.textContent = 'DERROTA';
+      title.style.color = '#e74c3c';
+      text.textContent = `Los bots conquistaron: ${botTotal} vs ${this.playerScore}`;
+    } else {
+      title.textContent = 'EMPATE';
+      title.style.color = '#f39c12';
+      text.textContent = `${this.playerScore} a ${botTotal}. ¿Otra ronda?`;
+    }
+    
+    document.exitPointerLock();
+    document.getElementById('overlayEnd').classList.add('visible');
+  }
+};
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+game.init();
+</script>
+</body>
+</html>
