@@ -2,241 +2,151 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Claim.io 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Claim.io — Reclama el Mapa</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
   html, body {
     width: 100%; height: 100%;
-    background: #020205;
+    background: #0a0a12;
     color: #fff;
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Fredoka', system-ui, sans-serif;
     overflow: hidden;
     position: fixed;
   }
-  
   canvas {
     display: block;
-    width: 100vw !important;
-    height: 100vh !important;
-    position: fixed !important;
-    top: 0; left: 0;
-    z-index: 1;
+    width: 100vw !important; height: 100vh !important;
+    position: fixed !important; top: 0; left: 0; z-index: 1;
   }
-  
-  /* BLOCKER / START SCREEN */
+
+  /* ===== START SCREEN ===== */
   #blocker {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(2, 2, 8, 0.95);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-    backdrop-filter: blur(10px);
-    padding: 20px;
-    text-align: center;
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, #1a1025 0%, #050508 70%);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    z-index: 100; padding: 24px; text-align: center;
   }
-  #blocker h1 {
-    font-size: clamp(36px, 10vw, 64px);
-    font-weight: 900;
-    background: linear-gradient(135deg, #e94560, #ff6b81);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 10px;
-    letter-spacing: -2px;
+  #blocker .logo {
+    font-size: clamp(42px, 12vw, 72px); font-weight: 700;
+    background: linear-gradient(135deg, #ff4d6d, #ff8fa3, #ffb3c1);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -1px; margin-bottom: 6px;
+    text-shadow: 0 0 40px rgba(255,77,109,0.4);
   }
-  #blocker p { font-size: 16px; color: #889; margin-bottom: 8px; }
+  #blocker .tagline { font-size: 15px; color: #a0a0b8; margin-bottom: 28px; max-width: 280px; line-height: 1.4; }
+  #blocker .keys { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 28px; }
   #blocker .key {
-    display: inline-block;
-    background: #1a1a2e;
-    border: 1px solid #334;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-family: monospace;
-    color: #e94560;
-    margin: 0 2px;
-    font-size: 13px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    padding: 6px 12px; border-radius: 8px; font-size: 13px; color: #ff8fa3;
   }
-  #blocker button {
-    margin-top: 24px;
-    padding: 18px 50px;
-    font-size: 20px;
-    font-weight: 800;
-    border: none;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #e94560, #c73e54);
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 0 40px rgba(233, 69, 96, 0.4);
-    animation: pulse 2s infinite;
+  #btnStart {
+    padding: 16px 48px; font-size: 20px; font-weight: 700; font-family: inherit;
+    border: none; border-radius: 16px; cursor: pointer;
+    background: linear-gradient(135deg, #ff4d6d, #c9184a);
+    color: #fff; box-shadow: 0 8px 32px rgba(255,77,109,0.45);
+    transition: transform 0.15s, box-shadow 0.15s;
   }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.03); }
+  #btnStart:active { transform: scale(0.96); }
+  #blocker .chars-preview {
+    display: flex; gap: 16px; margin-top: 36px; opacity: 0.85;
   }
-  
-  /* HUD */
+  #blocker .char-card {
+    width: 64px; height: 64px; border-radius: 14px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center; font-size: 28px;
+  }
+
+  /* ===== HUD ===== */
   #hud {
-    position: fixed;
-    top: 0; left: 0; width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    pointer-events: none;
-    z-index: 10;
+    position: fixed; top: 0; left: 0; width: 100%;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 14px 14px env(safe-area-inset-top, 14px);
+    pointer-events: none; z-index: 10;
   }
   .hud-box {
-    background: rgba(10, 10, 20, 0.75);
-    border: 1px solid rgba(233, 69, 96, 0.25);
-    border-radius: 10px;
-    padding: 8px 14px;
-    backdrop-filter: blur(4px);
+    background: rgba(12,10,20,0.82); border: 1px solid rgba(255,77,109,0.22);
+    border-radius: 12px; padding: 8px 14px; backdrop-filter: blur(8px);
+    min-width: 64px; text-align: center;
   }
-  .hud-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #778; }
-  .hud-value { font-size: 24px; font-weight: 800; }
-  #hudTime { color: #f39c12; }
-  #hudPlayer { color: #e94560; }
-  #hudBot { color: #2ecc71; }
-  
+  .hud-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #8888a0; font-weight: 600; }
+  .hud-value { font-size: 22px; font-weight: 700; line-height: 1.2; }
+  #hudTime { color: #ffc107; }
+  #hudPlayer { color: #ff4d6d; }
+  #hudBot { color: #4ade80; }
+
   #crosshair {
-    position: fixed;
-    top: 50%; left: 50%;
-    width: 20px; height: 20px;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: 5;
-    opacity: 0;
+    position: fixed; top: 50%; left: 50%; width: 22px; height: 22px;
+    transform: translate(-50%,-50%); pointer-events: none; z-index: 5; opacity: 0;
   }
-  .desktop #crosshair { opacity: 1; }
+  .desktop #crosshair { opacity: 0.9; }
   #crosshair::before, #crosshair::after {
-    content: ''; position: absolute; background: rgba(255,255,255,0.8);
+    content: ''; position: absolute; background: rgba(255,255,255,0.85); border-radius: 1px;
   }
-  #crosshair::before { top: 9px; left: 0; width: 20px; height: 2px; }
-  #crosshair::after { top: 0; left: 9px; width: 2px; height: 20px; }
-  
+  #crosshair::before { top: 10px; left: 0; width: 22px; height: 2px; }
+  #crosshair::after { top: 0; left: 10px; width: 2px; height: 22px; }
+
   #powerupBar {
-    position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 8px;
-    z-index: 10;
-    pointer-events: none;
+    position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 10; pointer-events: none;
   }
   .pup {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    opacity: 0;
-    transition: opacity 0.3s;
-    border: 1px solid;
+    padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 700;
+    opacity: 0; transition: opacity 0.25s, transform 0.25s; border: 1.5px solid;
+    transform: translateY(8px);
   }
-  .pup.active { opacity: 1; }
-  .pup-speed { background: rgba(52,152,219,0.2); color: #3498db; border-color: #3498db; }
-  .pup-shield { background: rgba(155,89,182,0.2); color: #9b59b6; border-color: #9b59b6; }
-  .pup-bomb { background: rgba(231,76,60,0.2); color: #e74c3c; border-color: #e74c3c; }
-  
-  /* TOUCH CONTROLS */
+  .pup.active { opacity: 1; transform: translateY(0); }
+  .pup-speed { background: rgba(56,189,248,0.2); color: #38bdf8; border-color: #38bdf8; }
+  .pup-shield { background: rgba(168,85,247,0.2); color: #a855f7; border-color: #a855f7; }
+  .pup-bomb { background: rgba(248,113,113,0.2); color: #f87171; border-color: #f87171; }
+
+  /* ===== TOUCH ===== */
   #touchControls {
-    position: fixed;
-    bottom: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 20;
-    display: none;
+    position: fixed; inset: 0; pointer-events: none; z-index: 20; display: none;
   }
   .touch-device #touchControls { display: block; }
-  
-  /* Joystick */
   #joystickZone {
-    position: absolute;
-    bottom: 20px; left: 20px;
-    width: 160px; height: 160px;
-    pointer-events: auto;
+    position: absolute; bottom: 24px; left: 20px; width: 150px; height: 150px; pointer-events: auto;
   }
   #joystickBase {
-    position: absolute;
-    width: 120px; height: 120px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.08);
-    border: 2px solid rgba(255,255,255,0.15);
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+    position: absolute; width: 110px; height: 110px; border-radius: 50%;
+    background: rgba(255,255,255,0.07); border: 2px solid rgba(255,255,255,0.14);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
   }
   #joystickThumb {
-    position: absolute;
-    width: 50px; height: 50px;
-    border-radius: 50%;
-    background: rgba(233, 69, 96, 0.6);
-    border: 2px solid rgba(255,255,255,0.3);
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    transition: transform 0.05s;
+    position: absolute; width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(255,77,109,0.55); border: 2px solid rgba(255,255,255,0.35);
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
   }
-  
-  /* Action Button */
   #actionBtn {
-    position: absolute;
-    bottom: 30px; right: 30px;
-    width: 90px; height: 90px;
-    border-radius: 50%;
-    background: rgba(233, 69, 96, 0.35);
-    border: 2px solid rgba(233, 69, 96, 0.6);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: auto;
-    user-select: none;
-    backdrop-filter: blur(4px);
+    position: absolute; bottom: 36px; right: 28px; width: 84px; height: 84px;
+    border-radius: 50%; background: rgba(255,77,109,0.32);
+    border: 2.5px solid rgba(255,77,109,0.7); color: #fff;
+    font-size: 12px; font-weight: 700; font-family: inherit;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: auto; user-select: none; backdrop-filter: blur(6px);
   }
-  #actionBtn:active {
-    background: rgba(233, 69, 96, 0.6);
-    transform: scale(0.95);
-  }
-  
-  /* Camera zone (right half) */
+  #actionBtn:active { background: rgba(255,77,109,0.55); transform: scale(0.93); }
   #camZone {
-    position: absolute;
-    top: 80px; right: 0;
-    width: 60%; height: calc(100% - 180px);
-    pointer-events: auto;
+    position: absolute; top: 70px; right: 0; width: 55%; height: calc(100% - 170px); pointer-events: auto;
   }
-  
-  /* Overlay end */
+
+  /* ===== END OVERLAY ===== */
   #overlayEnd {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(2, 2, 8, 0.93);
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 200;
-    padding: 20px;
-    text-align: center;
+    position: fixed; inset: 0; background: rgba(5,5,12,0.92);
+    display: none; flex-direction: column; justify-content: center; align-items: center;
+    z-index: 200; padding: 24px; text-align: center;
   }
   #overlayEnd.visible { display: flex; }
-  #overlayEnd h2 { font-size: clamp(32px, 8vw, 52px); margin-bottom: 10px; }
-  #overlayEnd p { font-size: 18px; color: #889; margin-bottom: 30px; }
-  #overlayEnd button {
-    padding: 14px 40px;
-    font-size: 18px;
-    font-weight: 700;
-    border: none;
-    border-radius: 10px;
-    background: #e94560;
-    color: #fff;
-    cursor: pointer;
+  #overlayEnd h2 { font-size: clamp(34px, 9vw, 54px); margin-bottom: 8px; font-weight: 700; }
+  #overlayEnd p { font-size: 17px; color: #9999b0; margin-bottom: 28px; }
+  #btnRestart {
+    padding: 14px 40px; font-size: 18px; font-weight: 700; font-family: inherit;
+    border: none; border-radius: 14px; background: linear-gradient(135deg,#ff4d6d,#c9184a);
+    color: #fff; cursor: pointer; box-shadow: 0 6px 24px rgba(255,77,109,0.4);
   }
-  
+
   .hidden { display: none !important; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -244,16 +154,24 @@
 <body>
 
 <div id="blocker">
-  <h1>CLAIM.IO 3D</h1>
-  <p id="desktopHint">Reclama territorio. Roba al enemigo. Domina.</p>
-  <p id="mobileHint" class="hidden">Reclama territorio. Roba. Domina el mapa.</p>
-  <p id="controlsDesktop" style="margin-bottom:20px;">
-    <span class="key">WASD</span> Mover · <span class="key">MOUSE</span> Mirar · <span class="key">CLICK</span> Reclamar
-  </p>
-  <p id="controlsMobile" class="hidden" style="margin-bottom:20px; color:#889;">
-    Joystick para mover · Desliza para mirar · Botón rojo para reclamar
-  </p>
-  <button id="btnStart">► JUGAR</button>
+  <div class="logo">CLAIM.IO</div>
+  <p class="tagline">Reclama territorio. Roba a los rivales. Domina el mapa de bloques.</p>
+  <div class="keys" id="controlsDesktop">
+    <span class="key">WASD</span>
+    <span class="key">MOUSE</span>
+    <span class="key">CLICK</span>
+  </div>
+  <div class="keys hidden" id="controlsMobile">
+    <span class="key">Joystick</span>
+    <span class="key">Desliza</span>
+    <span class="key">Botón rojo</span>
+  </div>
+  <button id="btnStart">▶  JUGAR</button>
+  <div class="chars-preview">
+    <div class="char-card" title="Calamar">🦑</div>
+    <div class="char-card" title="Cristal">💎</div>
+    <div class="char-card" title="Orbe">🔮</div>
+  </div>
 </div>
 
 <div id="hud">
@@ -261,13 +179,13 @@
     <div class="hud-label">Tiempo</div>
     <div class="hud-value" id="hudTime">2:00</div>
   </div>
-  <div style="display:flex; gap:10px;">
+  <div style="display:flex;gap:8px;">
     <div class="hud-box">
       <div class="hud-label">Tú</div>
       <div class="hud-value" id="hudPlayer">0</div>
     </div>
     <div class="hud-box">
-      <div class="hud-label">Bot</div>
+      <div class="hud-label">Rivales</div>
       <div class="hud-value" id="hudBot">0</div>
     </div>
   </div>
@@ -293,125 +211,142 @@
 <div id="overlayEnd">
   <h2 id="endTitle">¡Ronda terminada!</h2>
   <p id="endText">Resultado</p>
-  <button onclick="game.restart()">Jugar otra vez</button>
+  <button id="btnRestart">Jugar otra vez</button>
 </div>
 
 <script>
-// ==========================================
-//  CONFIGURACIÓN
-// ==========================================
+// =====================================================
+//  CONFIG
+// =====================================================
 const CFG = {
-  GRID: 24,
-  TILE: 5,
-  PLAYER_SPEED: 18,
-  BOT_SPEED: 9,
+  GRID: 22,
+  TILE: 4.5,
+  PLAYER_SPEED: 16,
+  BOT_SPEED: 7.5,
   BOT_COUNT: 3,
   ROUND_TIME: 120,
-  CLAIM_CD: 0.15,
-  POWERUP_SPAWN: 6,
-  POWERUP_DURATION: 8,
+  CLAIM_CD: 0.12,
+  POWERUP_SPAWN: 7,
+  POWERUP_DURATION: 7,
   COLORS: {
-    neutral: 0x151525,
-    player: 0xe94560,
-    bot: [0x2ecc71, 0xf39c12, 0x9b59b6],
-    powerupSpeed: 0x3498db,
-    powerupShield: 0x9b59b6,
-    powerupBomb: 0xe74c3c
+    neutral: 0x1a1a2e,
+    player: 0xff4d6d,
+    bot: [0x4ade80, 0xfbbf24, 0xa78bfa],
+    powerupSpeed: 0x38bdf8,
+    powerupShield: 0xa855f7,
+    powerupBomb: 0xf87171
   }
 };
 const WORLD = CFG.GRID * CFG.TILE;
 const WH = WORLD / 2;
 
-// ==========================================
-//  DETECCIÓN DE DISPOSITIVO
-// ==========================================
-const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-if(isTouchDevice) {
+// =====================================================
+//  DEVICE
+// =====================================================
+const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+if (isTouch) {
   document.body.classList.add('touch-device');
-  document.getElementById('desktopHint').classList.add('hidden');
-  document.getElementById('mobileHint').classList.remove('hidden');
   document.getElementById('controlsDesktop').classList.add('hidden');
   document.getElementById('controlsMobile').classList.remove('hidden');
 } else {
   document.body.classList.add('desktop');
 }
 
-// ==========================================
-//  THREE.JS SETUP
-// ==========================================
+// =====================================================
+//  THREE.JS
+// =====================================================
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x020205);
-scene.fog = new THREE.Fog(0x020205, 30, 90);
+scene.background = new THREE.Color(0x0a0a14);
+scene.fog = new THREE.FogExp2(0x0a0a14, 0.018);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
-camera.position.set(0, 2.5, 0);
+const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 180);
+camera.position.set(0, 2.2, 0);
+camera.rotation.order = 'YXZ';
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// Iluminación
-const ambient = new THREE.AmbientLight(0x303050, 0.6);
-scene.add(ambient);
+// Lights
+scene.add(new THREE.AmbientLight(0x404060, 0.55));
+const sun = new THREE.DirectionalLight(0xfff0e0, 0.55);
+sun.position.set(30, 50, 20);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.left = sun.shadow.camera.bottom = -55;
+sun.shadow.camera.right = sun.shadow.camera.top = 55;
+scene.add(sun);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
-dirLight.position.set(40, 80, 40);
-dirLight.castShadow = true;
-dirLight.shadow.camera.left = -60;
-dirLight.shadow.camera.right = 60;
-dirLight.shadow.camera.top = 60;
-dirLight.shadow.camera.bottom = -60;
-scene.add(dirLight);
-
-const playerLight = new THREE.PointLight(CFG.COLORS.player, 1.2, 25);
+const playerLight = new THREE.PointLight(CFG.COLORS.player, 1.4, 22, 1.5);
 scene.add(playerLight);
 
-// ==========================================
-//  GRID DE TILES
-// ==========================================
-const tileGeo = new THREE.BoxGeometry(CFG.TILE, 0.4, CFG.TILE);
+const hemi = new THREE.HemisphereLight(0x6060a0, 0x1a1020, 0.35);
+scene.add(hemi);
+
+// =====================================================
+//  TILES
+// =====================================================
+const tileGeo = new THREE.BoxGeometry(CFG.TILE * 0.96, 0.35, CFG.TILE * 0.96);
 const tiles = [];
 
 function createGrid() {
-  for(let z = 0; z < CFG.GRID; z++) {
+  const base = new THREE.Mesh(
+    new THREE.PlaneGeometry(WORLD + 4, WORLD + 4),
+    new THREE.MeshLambertMaterial({ color: 0x0c0c16 })
+  );
+  base.rotation.x = -Math.PI / 2;
+  base.position.y = -0.4;
+  scene.add(base);
+
+  for (let z = 0; z < CFG.GRID; z++) {
     const row = [];
-    for(let x = 0; x < CFG.GRID; x++) {
-      const mat = new THREE.MeshLambertMaterial({ 
+    for (let x = 0; x < CFG.GRID; x++) {
+      const mat = new THREE.MeshLambertMaterial({
         color: CFG.COLORS.neutral,
         emissive: CFG.COLORS.neutral,
-        emissiveIntensity: 0.1
+        emissiveIntensity: 0.08
       });
       const mesh = new THREE.Mesh(tileGeo, mat);
       mesh.position.set(
-        x * CFG.TILE + CFG.TILE/2 - WH,
-        -0.2,
-        z * CFG.TILE + CFG.TILE/2 - WH
+        x * CFG.TILE + CFG.TILE / 2 - WH,
+        -0.15,
+        z * CFG.TILE + CFG.TILE / 2 - WH
       );
       mesh.receiveShadow = true;
+      mesh.castShadow = true;
       scene.add(mesh);
       row.push({ mesh, owner: null });
     }
     tiles.push(row);
   }
+
+  const wallMat = new THREE.MeshLambertMaterial({ color: 0x12121f, emissive: 0x0a0a14, emissiveIntensity: 0.2 });
+  const wallH = 1.8;
+  [[0,1,0], [1,0,0], [0,-1,0], [-1,0,0]].forEach(([dx,dz]) => {
+    const w = new THREE.Mesh(new THREE.BoxGeometry(WORLD + 2, wallH, 1.2), wallMat);
+    w.position.set(dx * (WH + 0.8), wallH / 2 - 0.3, dz * (WH + 0.8));
+    if (dx === 0) w.rotation.y = Math.PI / 2;
+    scene.add(w);
+  });
 }
 
 function getTileIdx(px, pz) {
   const x = Math.floor((px + WH) / CFG.TILE);
   const z = Math.floor((pz + WH) / CFG.TILE);
-  if(x < 0 || x >= CFG.GRID || z < 0 || z >= CFG.GRID) return null;
+  if (x < 0 || x >= CFG.GRID || z < 0 || z >= CFG.GRID) return null;
   return { x, z };
 }
 
 function isAdjacentTo(x, z, owner) {
-  for(let dz = -1; dz <= 1; dz++) {
-    for(let dx = -1; dx <= 1; dx++) {
-      if(dx === 0 && dz === 0) continue;
+  for (let dz = -1; dz <= 1; dz++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      if (dx === 0 && dz === 0) continue;
       const nx = x + dx, nz = z + dz;
-      if(nx >= 0 && nx < CFG.GRID && nz >= 0 && nz < CFG.GRID) {
-        if(tiles[nz][nx].owner === owner) return true;
+      if (nx >= 0 && nx < CFG.GRID && nz >= 0 && nz < CFG.GRID) {
+        if (tiles[nz][nx].owner === owner) return true;
       }
     }
   }
@@ -419,590 +354,225 @@ function isAdjacentTo(x, z, owner) {
 }
 
 function claimTile(x, z, owner, force = false) {
+  if (x < 0 || x >= CFG.GRID || z < 0 || z >= CFG.GRID) return false;
   const t = tiles[z][x];
-  if(t.owner === owner) return false;
-  
-  if(!force && t.owner !== null) {
+  if (t.owner === owner) return false;
+
+  if (!force && t.owner !== null) {
     const hasTiles = owner === 'player' ? game.playerScore > 0 : true;
-    if(hasTiles && !isAdjacentTo(x, z, owner)) return false;
+    if (hasTiles && !isAdjacentTo(x, z, owner)) return false;
   }
-  
-  if(t.owner && t.owner !== owner) {
-    const victim = t.owner === 'player' ? {shield: game.playerShield} : game.bots.find(b => b.id === t.owner);
-    if(victim && victim.shield > 0) return false;
+
+  if (t.owner && t.owner !== owner) {
+    const victim = t.owner === 'player'
+      ? { shield: game.playerShield }
+      : game.bots.find(b => b.id === t.owner);
+    if (victim && victim.shield > 0) return false;
   }
-  
-  if(t.owner === 'player') game.playerScore--;
-  else if(t.owner && t.owner.startsWith('bot')) {
+
+  if (t.owner === 'player') game.playerScore--;
+  else if (t.owner && t.owner.startsWith('bot')) {
     const b = game.bots.find(bo => bo.id === t.owner);
-    if(b) b.score--;
+    if (b) b.score--;
   }
-  
+
   t.owner = owner;
-  const color = owner === 'player' ? CFG.COLORS.player : CFG.COLORS.bot[owner === 'bot0' ? 0 : owner === 'bot1' ? 1 : 2];
+  const color = owner === 'player'
+    ? CFG.COLORS.player
+    : CFG.COLORS.bot[parseInt(owner.replace('bot', '')) || 0];
   t.mesh.material.color.setHex(color);
   t.mesh.material.emissive.setHex(color);
-  t.mesh.material.emissiveIntensity = 0.4;
-  
-  t.mesh.position.y = 0.1;
-  setTimeout(() => { t.mesh.position.y = -0.2; }, 100);
-  
-  if(owner === 'player') game.playerScore++;
-  else { const b = game.bots.find(bo => bo.id === owner); if(b) b.score++; }
-  
+  t.mesh.material.emissiveIntensity = 0.45;
+
+  t.mesh.position.y = 0.25;
+  t.mesh.scale.set(1.08, 1.3, 1.08);
+  setTimeout(() => {
+    t.mesh.position.y = -0.15;
+    t.mesh.scale.set(1, 1, 1);
+  }, 90);
+
+  if (owner === 'player') game.playerScore++;
+  else {
+    const b = game.bots.find(bo => bo.id === owner);
+    if (b) b.score++;
+  }
   return true;
-       }
- // ==========================================
+}
+
+// =====================================================
+//  ORIGINAL CHARACTERS
+// =====================================================
+function createCalamar(colorHex) {
+  const group = new THREE.Group();
+  const bodyMat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.25 });
+  const darkMat = new THREE.MeshLambertMaterial({ color: 0x111118 });
+
+  const mantle = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.4, 6), bodyMat);
+  mantle.position.y = 1.1;
+  mantle.rotation.x = Math.PI;
+  group.add(mantle);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 6), bodyMat);
+  head.position.y = 1.85;
+  group.add(head);
+
+  const eyeGeo = new THREE.SphereGeometry(0.14, 6, 4);
+  const eyeL = new THREE.Mesh(eyeGeo, darkMat);
+  eyeL.position.set(-0.22, 1.95, 0.4);
+  const eyeR = eyeL.clone();
+  eyeR.position.x = 0.22;
+  group.add(eyeL, eyeR);
+
+  for (let i = 0; i < 6; i++) {
+    const ang = (i / 6) * Math.PI * 2;
+    const tent = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.04, 1.1, 4), bodyMat);
+    tent.position.set(Math.cos(ang) * 0.35, 0.35, Math.sin(ang) * 0.35);
+    tent.rotation.x = Math.PI * 0.15 * Math.sin(ang * 2);
+    tent.rotation.z = Math.cos(ang) * 0.3;
+    group.add(tent);
+  }
+
+  group.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+  return group;
+}
+
+function createCristal(colorHex) {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({
+    color: colorHex, emissive: colorHex, emissiveIntensity: 0.4,
+    transparent: true, opacity: 0.92
+  });
+
+  const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.85, 0), mat);
+  crystal.position.y = 1.2;
+  crystal.scale.set(0.7, 1.4, 0.7);
+  group.add(crystal);
+
+  const core = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.35, 0),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+  core.position.y = 1.2;
+  group.add(core);
+
+  for (let i = 0; i < 3; i++) {
+    const shard = new THREE.Mesh(new THREE.TetrahedronGeometry(0.2, 0), mat);
+    shard.userData = { angle: (i / 3) * Math.PI * 2, radius: 1.1 };
+    group.add(shard);
+  }
+
+  group.traverse(c => { if (c.isMesh) c.castShadow = true; });
+  return group;
+}
+
+function createOrbe(colorHex) {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.35 });
+
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 1), mat);
+  core.position.y = 1.1;
+  group.add(core);
+
+  const ringGeo = new THREE.TorusGeometry(1.0, 0.06, 6, 16);
+  const ring1 = new THREE.Mesh(ringGeo, mat);
+  ring1.position.y = 1.1;
+  ring1.rotation.x = Math.PI / 2.5;
+  group.add(ring1);
+
+  const ring2 = new THREE.Mesh(ringGeo, mat);
+  ring2.position.y = 1.1;
+  ring2.rotation.x = Math.PI / 1.6;
+  ring2.rotation.y = Math.PI / 3;
+  group.add(ring2);
+
+  for (let i = 0; i < 4; i++) {
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1, 4, 4), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    dot.userData = { angle: (i / 4) * Math.PI * 2, radius: 1.35 };
+    group.add(dot);
+  }
+
+  group.traverse(c => { if (c.isMesh) c.castShadow = true; });
+  return group;
+}
+
+const CHAR_BUILDERS = [createCalamar, createCristal, createOrbe];
+
+// =====================================================
 //  BOTS
-// ==========================================
+// =====================================================
 class Bot {
-  constructor(id, colorHex) {
+  constructor(id, colorHex, typeIdx) {
     this.id = id;
     this.score = 0;
     this.shield = 0;
     this.speed = CFG.BOT_SPEED;
     this.claimCd = 0;
-    
-    const geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-    const mat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.3 });
-    this.mesh = new THREE.Mesh(geo, mat);
-    this.mesh.castShadow = true;
-    
+    this.bomb = 0;
+    this.typeIdx = typeIdx;
+
+    this.mesh = CHAR_BUILDERS[typeIdx](colorHex);
+    this.mesh.scale.setScalar(1.05);
+
     let sx, sz;
     do {
       sx = Math.floor(Math.random() * CFG.GRID);
       sz = Math.floor(Math.random() * CFG.GRID);
-    } while(Math.abs(sx - CFG.GRID/2) < 4 && Math.abs(sz - CFG.GRID/2) < 4);
-    
+    } while (Math.abs(sx - CFG.GRID / 2) < 5 && Math.abs(sz - CFG.GRID / 2) < 5);
+
     this.mesh.position.set(
-      sx * CFG.TILE + CFG.TILE/2 - WH,
-      1,
-      sz * CFG.TILE + CFG.TILE/2 - WH
+      sx * CFG.TILE + CFG.TILE / 2 - WH,
+      0,
+      sz * CFG.TILE + CFG.TILE / 2 - WH
     );
     scene.add(this.mesh);
-    
-    this.light = new THREE.PointLight(colorHex, 0.8, 15);
+
+    this.light = new THREE.PointLight(colorHex, 0.9, 14);
     scene.add(this.light);
-    
+
     this.tx = sx; this.tz = sz;
     this.targetX = sx; this.targetZ = sz;
-    this.thinkT = 0;
-    
+    this.thinkT = 0.5 + Math.random();
+    this.bobPhase = Math.random() * Math.PI * 2;
+
     claimTile(sx, sz, this.id, true);
   }
-  
+
   update(dt) {
     this.claimCd -= dt;
-    this.shield -= dt;
+    this.shield = Math.max(0, this.shield - dt);
+    this.bomb = Math.max(0, this.bomb - dt);
     this.thinkT -= dt;
-    
-    if(this.thinkT <= 0) {
-      this.thinkT = Math.random() * 1.5 + 0.5;
+    this.bobPhase += dt * 2.2;
+
+    this.mesh.position.y = Math.sin(this.bobPhase) * 0.12;
+    if (this.typeIdx === 1) {
+      this.mesh.rotation.y += dt * 1.2;
+      this.mesh.children.forEach(c => {
+        if (c.userData.angle !== undefined) {
+          c.userData.angle += dt * 2.5;
+          c.position.x = Math.cos(c.userData.angle) * c.userData.radius;
+          c.position.z = Math.sin(c.userData.angle) * c.userData.radius;
+          c.position.y = 1.2 + Math.sin(c.userData.angle * 2) * 0.2;
+        }
+      });
+    } else if (this.typeIdx === 2) {
+      this.mesh.rotation.y += dt * 0.8;
+      this.mesh.children.forEach(c => {
+        if (c.userData.angle !== undefined) {
+          c.userData.angle += dt * 3;
+          c.position.x = Math.cos(c.userData.angle) * c.userData.radius;
+          c.position.z = Math.sin(c.userData.angle) * c.userData.radius;
+          c.position.y = 1.1 + Math.sin(c.userData.angle) * 0.25;
+        }
+      });
+    } else {
+      this.mesh.rotation.y += dt * 1.5;
+    }
+
+    if (this.thinkT <= 0) {
+      this.thinkT = 0.6 + Math.random() * 1.4;
       const candidates = [];
-      for(let dz = -2; dz <= 2; dz++) {
-        for(let dx = -2; dx <= 2; dx++) {
+      for (let dz = -3; dz <= 3; dz++) {
+        for (let dx = -3; dx <= 3; dx++) {
           const nx = this.tx + dx, nz = this.tz + dz;
-          if(nx >= 0 && nx < CFG.GRID && nz >= 0 && nz < CFG.GRID) {
-            if(tiles[nz][nx].owner !== this.id) candidates.push({x:nx, z:nz});
-          }
-        }
-      }
-      if(candidates.length > 0) {
-        const c = candidates[Math.floor(Math.random() * candidates.length)];
-        this.targetX = c.x; this.targetZ = c.z;
-      }
-    }
-    
-    const tx = this.targetX * CFG.TILE + CFG.TILE/2 - WH;
-    const tz = this.targetZ * CFG.TILE + CFG.TILE/2 - WH;
-    const dx = tx - this.mesh.position.x;
-    const dz = tz - this.mesh.position.z;
-    const d = Math.hypot(dx, dz);
-    
-    if(d > 0.3) {
-      this.mesh.position.x += (dx/d) * this.speed * dt;
-      this.mesh.position.z += (dz/d) * this.speed * dt;
-      this.mesh.rotation.y += dt * 2;
-    } else {
-      this.tx = this.targetX; this.tz = this.targetZ;
-      if(this.claimCd <= 0) {
-        claimTile(this.tx, this.tz, this.id);
-        this.claimCd = CFG.CLAIM_CD * 2;
-      }
-      this.thinkT = 0;
-    }
-    
-    this.light.position.copy(this.mesh.position);
-  }
-}
-
-// ==========================================
-//  POWER-UPS
-// ==========================================
-const powerups = [];
-const pupGeo = new THREE.SphereGeometry(0.6, 16, 16);
-
-function spawnPowerup() {
-  if(powerups.length >= 4) return;
-  const x = Math.floor(Math.random() * (CFG.GRID - 4)) + 2;
-  const z = Math.floor(Math.random() * (CFG.GRID - 4)) + 2;
-  const types = ['speed', 'shield', 'bomb'];
-  const type = types[Math.floor(Math.random() * types.length)];
-  const color = CFG.COLORS[`powerup${type.charAt(0).toUpperCase() + type.slice(1)}`];
-  
-  const mat = new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: 0.6 });
-  const mesh = new THREE.Mesh(pupGeo, mat);
-  mesh.position.set(
-    x * CFG.TILE + CFG.TILE/2 - WH,
-    1.5,
-    z * CFG.TILE + CFG.TILE/2 - WH
-  );
-  scene.add(mesh);
-  
-  const particles = [];
-  for(let i = 0; i < 3; i++) {
-    const p = new THREE.Mesh(
-      new THREE.BoxGeometry(0.15, 0.15, 0.15),
-      new THREE.MeshBasicMaterial({ color: 0xffffff })
-    );
-    scene.add(p);
-    particles.push({ mesh: p, angle: i * (Math.PI*2/3), radius: 1.2 });
-  }
-  
-  powerups.push({ mesh, type, particles, life: 15, angle: 0 });
-}
-
-function updatePowerups(dt) {
-  for(let i = powerups.length - 1; i >= 0; i--) {
-    const p = powerups[i];
-    p.life -= dt;
-    p.angle += dt * 2;
-    p.mesh.position.y = 1.5 + Math.sin(p.angle) * 0.3;
-    p.mesh.rotation.y += dt * 3;
-    
-    for(const part of p.particles) {
-      part.angle += dt * 3;
-      part.mesh.position.x = p.mesh.position.x + Math.cos(part.angle) * part.radius;
-      part.mesh.position.z = p.mesh.position.z + Math.sin(part.angle) * part.radius;
-      part.mesh.position.y = p.mesh.position.y;
-      part.mesh.rotation.x += dt * 4;
-    }
-    
-    const d = Math.hypot(camera.position.x - p.mesh.position.x, camera.position.z - p.mesh.position.z);
-    if(d < 2) {
-      applyPowerup('player', p.type);
-      removePowerup(i);
-      continue;
-    }
-    for(const b of game.bots) {
-      const db = Math.hypot(b.mesh.position.x - p.mesh.position.x, b.mesh.position.z - p.mesh.position.z);
-      if(db < 2) {
-        applyPowerup(b.id, p.type);
-        removePowerup(i);
-        break;
-      }
-    }
-    
-    if(p.life <= 0) removePowerup(i);
-  }
-}
-
-function removePowerup(i) {
-  const p = powerups[i];
-  scene.remove(p.mesh);
-  for(const part of p.particles) scene.remove(part.mesh);
-  powerups.splice(i, 1);
-}
-
-function applyPowerup(target, type) {
-  if(target === 'player') {
-    if(type === 'speed') game.playerSpeedBoost = CFG.POWERUP_DURATION;
-    if(type === 'shield') game.playerShield = CFG.POWERUP_DURATION;
-    if(type === 'bomb') game.playerBomb = CFG.POWERUP_DURATION;
-  } else {
-    const b = game.bots.find(bo => bo.id === target);
-    if(b) {
-      if(type === 'speed') b.speed = CFG.BOT_SPEED * 2;
-      if(type === 'shield') b.shield = CFG.POWERUP_DURATION;
-      if(type === 'bomb') b.speed = CFG.BOT_SPEED * 2;
-    }
-  }
-}
- // ==========================================
-//  INPUT - TECLADO / RATÓN (PC)
-// ==========================================
-const keys = {};
-let isLocked = false;
-
-document.addEventListener('keydown', e => keys[e.code] = true);
-document.addEventListener('keyup', e => keys[e.code] = false);
-
-const blocker = document.getElementById('blocker');
-const btnStart = document.getElementById('btnStart');
-
-btnStart.addEventListener('click', () => {
-  if(!isTouchDevice) {
-    renderer.domElement.requestPointerLock();
-  } else {
-    // En móvil, simplemente ocultamos el blocker
-    isLocked = true;
-    blocker.style.display = 'none';
-  }
-});
-
-document.addEventListener('pointerlockchange', () => {
-  isLocked = document.pointerLockElement === renderer.domElement;
-  blocker.style.display = isLocked ? 'none' : 'flex';
-});
-
-document.addEventListener('mousemove', (e) => {
-  if(!isLocked || isTouchDevice) return;
-  camera.rotation.y -= e.movementX * 0.002;
-  camera.rotation.x -= e.movementY * 0.002;
-  camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
-});
-
-// Click para reclamar (PC)
-document.addEventListener('mousedown', () => {
-  if(!isLocked || isTouchDevice || game.state !== 'playing') return;
-  tryClaimPlayer();
-});
-
-function tryClaimPlayer() {
-  if(game.playerClaimCd > 0) return;
-  
-  const raycaster = new THREE.Raycaster();
-  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-  
-  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0.2);
-  const target = new THREE.Vector3();
-  raycaster.ray.intersectPlane(plane, target);
-  
-  if(target) {
-    const idx = getTileIdx(target.x, target.z);
-    if(idx) {
-      const claimed = claimTile(idx.x, idx.z, 'player');
-      if(claimed) {
-        game.playerClaimCd = CFG.CLAIM_CD;
-        if(game.playerBomb > 0) {
-          for(let dz = -1; dz <= 1; dz++) {
-            for(let dx = -1; dx <= 1; dx++) {
-              claimTile(idx.x + dx, idx.z + dz, 'player');
-            }
-          }
-          game.playerBomb = 0;
-        }
-      }
-    }
-  }
-}
-
-// ==========================================
-//  INPUT - TÁCTIL (MÓVIL)
-// ==========================================
-let touchJoystick = { active: false, id: null, startX: 0, startY: 0, dx: 0, dy: 0 };
-let touchCam = { active: false, id: null, lastX: 0, lastY: 0 };
-let touchAction = false;
-
-const joystickZone = document.getElementById('joystickZone');
-const joystickThumb = document.getElementById('joystickThumb');
-const camZone = document.getElementById('camZone');
-const actionBtn = document.getElementById('actionBtn');
-
-joystickZone.addEventListener('touchstart', e => {
-  e.preventDefault();
-  const t = e.changedTouches[0];
-  touchJoystick.active = true;
-  touchJoystick.id = t.identifier;
-  const rect = joystickZone.getBoundingClientRect();
-  touchJoystick.startX = rect.left + rect.width/2;
-  touchJoystick.startY = rect.top + rect.height/2;
-  updateJoystick(t.clientX, t.clientY);
-}, {passive: false});
-
-joystickZone.addEventListener('touchmove', e => {
-  e.preventDefault();
-  for(let i = 0; i < e.changedTouches.length; i++) {
-    if(e.changedTouches[i].identifier === touchJoystick.id) {
-      updateJoystick(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
-      break;
-    }
-  }
-}, {passive: false});
-
-joystickZone.addEventListener('touchend', e => {
-  e.preventDefault();
-  for(let i = 0; i < e.changedTouches.length; i++) {
-    if(e.changedTouches[i].identifier === touchJoystick.id) {
-      touchJoystick.active = false;
-      touchJoystick.dx = 0;
-      touchJoystick.dy = 0;
-      joystickThumb.style.transform = `translate(-50%, -50%)`;
-      break;
-    }
-  }
-}, {passive: false});
-
-function updateJoystick(cx, cy) {
-  const maxDist = 40;
-  let dx = cx - touchJoystick.startX;
-  let dy = cy - touchJoystick.startY;
-  const d = Math.hypot(dx, dy);
-  if(d > maxDist) { dx = (dx/d) * maxDist; dy = (dy/d) * maxDist; }
-  touchJoystick.dx = dx / maxDist;
-  touchJoystick.dy = dy / maxDist;
-  joystickThumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-}
-
-// Cámara táctil (zona derecha)
-camZone.addEventListener('touchstart', e => {
-  e.preventDefault();
-  const t = e.changedTouches[0];
-  touchCam.active = true;
-  touchCam.id = t.identifier;
-  touchCam.lastX = t.clientX;
-  touchCam.lastY = t.clientY;
-}, {passive: false});
-
-camZone.addEventListener('touchmove', e => {
-  e.preventDefault();
-  for(let i = 0; i < e.changedTouches.length; i++) {
-    const t = e.changedTouches[i];
-    if(t.identifier === touchCam.id) {
-      const dx = t.clientX - touchCam.lastX;
-      const dy = t.clientY - touchCam.lastY;
-      camera.rotation.y -= dx * 0.005;
-      camera.rotation.x -= dy * 0.005;
-      camera.rotation.x = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, camera.rotation.x));
-      touchCam.lastX = t.clientX;
-      touchCam.lastY = t.clientY;
-      break;
-    }
-  }
-}, {passive: false});
-
-camZone.addEventListener('touchend', e => {
-  e.preventDefault();
-  for(let i = 0; i < e.changedTouches.length; i++) {
-    if(e.changedTouches[i].identifier === touchCam.id) {
-      touchCam.active = false;
-      break;
-    }
-  }
-}, {passive: false});
-
-// Botón de acción
-actionBtn.addEventListener('touchstart', e => {
-  e.preventDefault();
-  touchAction = true;
-  actionBtn.style.transform = 'scale(0.92)';
-  if(game.state === 'playing') tryClaimPlayer();
-}, {passive: false});
-
-actionBtn.addEventListener('touchend', e => {
-  e.preventDefault();
-  touchAction = false;
-  actionBtn.style.transform = 'scale(1)';
-}, {passive: false});
-
-// También click para testing en desktop con botón
-actionBtn.addEventListener('mousedown', () => {
-  if(game.state === 'playing') tryClaimPlayer();
-});
-
-// ==========================================
-//  GAME LOOP
-// ==========================================
-const game = {
-  state: 'menu',
-  playerScore: 0,
-  playerSpeedBoost: 0,
-  playerShield: 0,
-  playerBomb: 0,
-  playerClaimCd: 0,
-  bots: [],
-  timeLeft: CFG.ROUND_TIME,
-  pupTimer: 3,
-  
-  init() {
-    createGrid();
-    this.restart();
-    requestAnimationFrame(t => this.loop(t));
-  },
-  
-  restart() {
-    for(const b of this.bots) {
-      scene.remove(b.mesh);
-      scene.remove(b.light);
-    }
-    this.bots = [];
-    
-    while(powerups.length) removePowerup(0);
-    
-    for(let z = 0; z < CFG.GRID; z++) {
-      for(let x = 0; x < CFG.GRID; x++) {
-        tiles[z][x].owner = null;
-        tiles[z][x].mesh.material.color.setHex(CFG.COLORS.neutral);
-        tiles[z][x].mesh.material.emissive.setHex(CFG.COLORS.neutral);
-        tiles[z][x].mesh.material.emissiveIntensity = 0.1;
-      }
-    }
-    
-    camera.position.set(0, 2.5, 0);
-    camera.rotation.set(0, 0, 0);
-    this.playerScore = 0;
-    this.playerSpeedBoost = 0;
-    this.playerShield = 0;
-    this.playerBomb = 0;
-    this.timeLeft = CFG.ROUND_TIME;
-    this.pupTimer = 2;
-    this.state = 'playing';
-    
-    for(let i = 0; i < CFG.BOT_COUNT; i++) {
-      this.bots.push(new Bot(`bot${i}`, CFG.COLORS.bot[i]));
-    }
-    
-    const pc = getTileIdx(camera.position.x, camera.position.z);
-    if(pc) claimTile(pc.x, pc.z, 'player', true);
-    
-    document.getElementById('overlayEnd').classList.remove('visible');
-    
-    // En móvil, asegurar que el blocker se oculta al reiniciar
-    if(isTouchDevice) {
-      blocker.style.display = 'none';
-      isLocked = true;
-    }
-  },
-  
-  lastTime: 0,
-  loop(timestamp) {
-    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05);
-    this.lastTime = timestamp;
-    
-    if(this.state === 'playing') {
-      this.update(dt);
-    }
-    this.render();
-    requestAnimationFrame(t => this.loop(t));
-  },
-  
-  update(dt) {
-    this.timeLeft -= dt;
-    if(this.timeLeft <= 0) { this.timeLeft = 0; this.endGame(); return; }
-    
-    this.playerClaimCd -= dt;
-    this.playerSpeedBoost -= dt;
-    this.playerShield -= dt;
-    if(this.playerBomb > 0 && this.playerBomb < 100) this.playerBomb -= dt;
-    
-    const speed = (this.playerSpeedBoost > 0 ? CFG.PLAYER_SPEED * 1.8 : CFG.PLAYER_SPEED);
-    
-    // Movimiento PC
-    const forward = new THREE.Vector3();
-    camera.getWorldDirection(forward);
-    forward.y = 0;
-    forward.normalize();
-    const right = new THREE.Vector3();
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
-    
-    const move = new THREE.Vector3();
-    
-    if(!isTouchDevice) {
-      if(keys['KeyW'] || keys['ArrowUp']) move.add(forward);
-      if(keys['KeyS'] || keys['ArrowDown']) move.sub(forward);
-      if(keys['KeyD'] || keys['ArrowRight']) move.add(right);
-      if(keys['KeyA'] || keys['ArrowLeft']) move.sub(right);
-    } else {
-      // Movimiento joystick táctil
-      if(touchJoystick.active) {
-        move.add(forward.clone().multiplyScalar(-touchJoystick.dy));
-        move.add(right.clone().multiplyScalar(touchJoystick.dx));
-      }
-    }
-    
-    if(move.length() > 0) {
-      move.normalize().multiplyScalar(speed * dt);
-      camera.position.add(move);
-    }
-    
-    const limit = WH - 1;
-    camera.position.x = Math.max(-limit, Math.min(limit, camera.position.x));
-    camera.position.z = Math.max(-limit, Math.min(limit, camera.position.z));
-    
-    playerLight.position.copy(camera.position);
-    
-    // Reclamar automático al caminar (tile bajo pies)
-    const idx = getTileIdx(camera.position.x, camera.position.z);
-    if(idx && this.playerClaimCd <= 0) {
-      const claimed = claimTile(idx.x, idx.z, 'player');
-      if(claimed) this.playerClaimCd = CFG.CLAIM_CD;
-    }
-    
-    for(const b of this.bots) b.update(dt);
-    
-    this.pupTimer -= dt;
-    if(this.pupTimer <= 0) {
-      spawnPowerup();
-      this.pupTimer = CFG.POWERUP_SPAWN;
-    }
-    updatePowerups(dt);
-    
-    this.updateHUD();
-  },
-  
-  render() {
-    renderer.render(scene, camera);
-  },
-  
-  updateHUD() {
-    const m = Math.floor(this.timeLeft / 60);
-    const s = Math.floor(this.timeLeft % 60);
-    document.getElementById('hudTime').textContent = `${m}:${s.toString().padStart(2,'0')}`;
-    document.getElementById('hudPlayer').textContent = this.playerScore;
-    
-    const botTotal = this.bots.reduce((a, b) => a + b.score, 0);
-    document.getElementById('hudBot').textContent = botTotal;
-    
-    document.getElementById('pupSpeed').classList.toggle('active', this.playerSpeedBoost > 0);
-    document.getElementById('pupShield').classList.toggle('active', this.playerShield > 0);
-    document.getElementById('pupBomb').classList.toggle('active', this.playerBomb > 0);
-  },
-  
-  endGame() {
-    this.state = 'ended';
-    const botTotal = this.bots.reduce((a, b) => a + b.score, 0);
-    const title = document.getElementById('endTitle');
-    const text = document.getElementById('endText');
-    
-    if(this.playerScore > botTotal) {
-      title.textContent = '¡VICTORIA! 🎉';
-      title.style.color = '#e94560';
-      text.textContent = `Dominaste: ${this.playerScore} vs ${botTotal}`;
-    } else if(this.playerScore < botTotal) {
-      title.textContent = 'DERROTA';
-      title.style.color = '#e74c3c';
-      text.textContent = `Bots ganan: ${botTotal} vs ${this.playerScore}`;
-    } else {
-      title.textContent = 'EMPATE';
-      title.style.color = '#f39c12';
-      text.textContent = `${this.playerScore} a ${botTotal}`;
-    }
-    
-    if(!isTouchDevice) document.exitPointerLock();
-    isLocked = false;
-    blocker.style.display = 'flex';
-    document.getElementById('overlayEnd').classList.add('visible');
-  }
-};
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-game.init();
-</script>
-</body>
-</html>
-
+          if (nx >= 0 && nx < CFG.GRID 
