@@ -1,37 +1,34 @@
-# 🎮 Claim.io 3D
+# 🎮 Claim.io
 
-> Un juego de navegador en **primera persona** donde compites para reclamar 
-> territorio en un mapa 3D low-poly. Rondas rápidas, bots agresivos y power-ups.
+> Claim territory on a 3D block map.  
+> Original characters · Fast rounds · Power-ups · Works on PC & mobile
 
-[![▶ JUGAR AHORA](badge)](https://userbyterex.github.io/Claim.io/)
+**▶ [PLAY NOW](https://userbyterex.github.io/Claim.io/)**
 
-## 🚀 Jugar ahora
-👉 userbyterex.github.io/Claim.io
+## Controls
 
-Compatible con **PC** (teclado + ratón) y **móvil** (controles táctiles nativos).
+| PC | Mobile |
+|----|--------|
+| WASD / Arrow keys → move | Left joystick |
+| Mouse → look | Swipe on the right side |
+| Click → claim | Red button |
 
-## 🕹️ Controles
+## Rival characters (original)
+- 🦑 **Calamar** — geometric squid-like entity with tentacles
+- 💎 **Cristal** — floating crystal with orbiting shards
+- 🔮 **Orbe** — energetic sphere with rotating rings
 
-### 💻 PC
-| Acción | Input |
-|--------|-------|
-| Moverse | WASD o Flechas |
-| Mirar | Ratón |
-| Reclamar | CLICK |
+## Power-ups
+⚡ Speed · 🛡 Shield · 💣 Area bomb
 
-### 📱 Móvil
-| Acción | Input |
-|--------|-------|
-| Moverse | Joystick virtual (abajo izq) |
-| Mirar | Deslizar (zona derecha) |
-| Reclamar | Botón rojo (abajo der) |
+## Stack
+Three.js r128 · Vanilla JS · GitHub Pages  
+Single file, no build step.
 
-## ⚡ Power-ups
-⚡ Velocidad | 🛡 Escudo | 💣 Bomba de área
-
-## 🛠️ Stack
-Three.js (r128) + Vanilla JS + GitHub Pages
-Sin build. Un solo archivo index.html.
-
-## 🗺️ Roadmap
-Fase 0 ✅ → Fase 1 (más mapas/bots) → Fase 2 (multiplayer) → Fase 3 (progresión)
+## Changelog
+- Original characters (no more plain cubes)
+- Improved visuals (lighting, walls, claim animations)
+- Game no longer starts automatically
+- Correct first-person camera controls
+- Clean restart flow
+- Better mobile UX
