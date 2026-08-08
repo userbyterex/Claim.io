@@ -17,9 +17,9 @@
   #btnStart { padding:18px 56px; font-size:22px; font-weight:700; font-family:inherit; border:none; border-radius:18px; cursor:pointer; background:linear-gradient(135deg,#ff4d6d,#c9184a); color:#fff; box-shadow:0 10px 36px rgba(255,77,109,0.5); }
   #btnStart:active { transform:scale(0.95); }
   #blocker .chars-preview { display:flex; gap:18px; margin-top:40px; opacity:0.9; }
-  #blocker .char-card { width:72px; height:72px; border-radius:16px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; font-size:32px; backdrop-filter:blur(6px); }
+  #blocker .char-card { width:72px; height:72px; border-radius:16px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; font-size:32px; }
   #hud { position:fixed; top:0; left:0; width:100%; display:flex; justify-content:space-between; align-items:flex-start; padding:14px 14px env(safe-area-inset-top,14px); pointer-events:none; z-index:10; }
-  .hud-box { background:rgba(12,28,48,0.72); border:1px solid rgba(255,255,255,0.18); border-radius:14px; padding:9px 16px; backdrop-filter:blur(10px); min-width:70px; text-align:center; box-shadow:0 4px 16px rgba(0,0,0,0.2); }
+  .hud-box { background:rgba(12,28,48,0.72); border:1px solid rgba(255,255,255,0.18); border-radius:14px; padding:9px 16px; backdrop-filter:blur(10px); min-width:70px; text-align:center; }
   .hud-label { font-size:10px; text-transform:uppercase; letter-spacing:1.3px; color:#a8c4d8; font-weight:600; }
   .hud-value { font-size:24px; font-weight:700; line-height:1.2; }
   #hudTime { color:#ffd54f; } #hudPlayer { color:#ff6b8a; } #hudBot { color:#69f0ae; }
@@ -39,25 +39,22 @@
   #joystickZone { position:absolute; bottom:28px; left:22px; width:160px; height:160px; pointer-events:auto; }
   #joystickBase { position:absolute; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.22); top:50%; left:50%; transform:translate(-50%,-50%); }
   #joystickThumb { position:absolute; width:52px; height:52px; border-radius:50%; background:rgba(255,77,109,0.6); border:2px solid rgba(255,255,255,0.4); top:50%; left:50%; transform:translate(-50%,-50%); }
-  #actionBtn { position:absolute; bottom:40px; right:30px; width:92px; height:92px; border-radius:50%; background:rgba(255,77,109,0.35); border:3px solid rgba(255,77,109,0.75); color:#fff; font-size:13px; font-weight:700; font-family:inherit; display:flex; align-items:center; justify-content:center; pointer-events:auto; user-select:none; backdrop-filter:blur(8px); box-shadow:0 6px 20px rgba(255,77,109,0.35); }
+  #actionBtn { position:absolute; bottom:40px; right:30px; width:92px; height:92px; border-radius:50%; background:rgba(255,77,109,0.35); border:3px solid rgba(255,77,109,0.75); color:#fff; font-size:13px; font-weight:700; font-family:inherit; display:flex; align-items:center; justify-content:center; pointer-events:auto; user-select:none; backdrop-filter:blur(8px); }
   #actionBtn:active { background:rgba(255,77,109,0.6); transform:scale(0.92); }
-  #bombBtn { position:absolute; bottom:140px; right:28px; width:70px; height:70px; border-radius:50%; background:rgba(248,113,113,0.45); border:3px solid rgba(248,113,113,0.95); color:#fff; font-size:11px; font-weight:700; font-family:inherit; display:none; align-items:center; justify-content:center; flex-direction:column; pointer-events:auto; user-select:none; backdrop-filter:blur(8px); box-shadow:0 4px 18px rgba(248,113,113,0.5); gap:2px; }
-  .touch-device #bombBtn { display:flex; }
-  #bombBtn.empty { opacity:0.35; pointer-events:none; }
-  #bombBtn:active { background:rgba(248,113,113,0.7); transform:scale(0.92); }
-  #bombBtn .count { font-size:16px; line-height:1; }
-  #jumpBtn { position:absolute; bottom:40px; right:120px; width:64px; height:64px; border-radius:50%; background:rgba(56,189,248,0.35); border:3px solid rgba(56,189,248,0.85); color:#fff; font-size:11px; font-weight:700; font-family:inherit; display:none; align-items:center; justify-content:center; pointer-events:auto; user-select:none; backdrop-filter:blur(8px); }
-  .touch-device #jumpBtn { display:flex; }
-  #jumpBtn:active { background:rgba(56,189,248,0.6); transform:scale(0.92); }
+  #bombBtn { position:fixed; bottom:140px; right:24px; width:74px; height:74px; border-radius:50%; background:rgba(248,113,113,0.55); border:3px solid #f87171; color:#fff; font-size:12px; font-weight:700; font-family:inherit; display:flex; align-items:center; justify-content:center; flex-direction:column; pointer-events:auto; user-select:none; backdrop-filter:blur(8px); box-shadow:0 4px 20px rgba(248,113,113,0.55); gap:2px; z-index:25; }
+  #bombBtn.empty { opacity:0.4; }
+  #bombBtn:active { background:rgba(248,113,113,0.8); transform:scale(0.92); }
+  #bombBtn .count { font-size:18px; line-height:1; }
+  #jumpBtn { position:fixed; bottom:40px; right:115px; width:64px; height:64px; border-radius:50%; background:rgba(56,189,248,0.45); border:3px solid #38bdf8; color:#fff; font-size:11px; font-weight:700; font-family:inherit; display:flex; align-items:center; justify-content:center; pointer-events:auto; user-select:none; backdrop-filter:blur(8px); z-index:25; }
+  #jumpBtn:active { background:rgba(56,189,248,0.7); transform:scale(0.92); }
   #camZone { position:absolute; top:70px; right:0; width:55%; height:calc(100% - 220px); pointer-events:auto; }
-  #bombHint { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:rgba(12,28,48,0.75); border:1px solid rgba(248,113,113,0.5); padding:8px 18px; border-radius:12px; font-size:13px; font-weight:600; color:#f87171; z-index:15; pointer-events:none; display:none; backdrop-filter:blur(8px); }
+  #bombHint { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:rgba(12,28,48,0.75); border:1px solid rgba(248,113,113,0.5); padding:8px 18px; border-radius:12px; font-size:13px; font-weight:600; color:#f87171; z-index:15; pointer-events:none; display:none; }
   #bombHint.visible { display:block; }
-  .desktop #bombHint.visible { display:block; }
   #overlayEnd { position:fixed; inset:0; background:rgba(15,35,60,0.94); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:200; padding:24px; text-align:center; }
   #overlayEnd.visible { display:flex; }
   #overlayEnd h2 { font-size:clamp(36px,10vw,58px); margin-bottom:10px; font-weight:700; }
   #overlayEnd p { font-size:18px; color:#b0c8d8; margin-bottom:30px; }
-  #btnRestart { padding:16px 44px; font-size:19px; font-weight:700; font-family:inherit; border:none; border-radius:16px; background:linear-gradient(135deg,#ff4d6d,#c9184a); color:#fff; cursor:pointer; box-shadow:0 8px 28px rgba(255,77,109,0.45); }
+  #btnRestart { padding:16px 44px; font-size:19px; font-weight:700; font-family:inherit; border:none; border-radius:16px; background:linear-gradient(135deg,#ff4d6d,#c9184a); color:#fff; cursor:pointer; }
   .hidden { display:none!important; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -94,10 +91,10 @@
   <div id="joystickZone"><div id="joystickBase"></div><div id="joystickThumb"></div></div>
   <div id="camZone"></div>
   <div id="actionBtn">MINE</div>
-  <div id="bombBtn">💣<span class="count" id="bombCount">0</span></div>
-  <div id="jumpBtn">JUMP</div>
 </div>
-<div id="bombHint">Press <b>B</b> to place bomb · You have <span id="bombCountDesk">0</span></div>
+<div id="bombBtn">💣<span class="count" id="bombCount">0</span></div>
+<div id="jumpBtn">JUMP</div>
+<div id="bombHint">Press <b>B</b> / 💣 to place bomb · You have <span id="bombCountDesk">0</span></div>
 <div id="overlayEnd">
   <h2 id="endTitle">Round over!</h2>
   <p id="endText">Result</p>
@@ -123,7 +120,7 @@ if (isTouch) {
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(CFG.COLORS.sky);
 scene.fog = new THREE.FogExp2(0x8FD4F5, 0.006);
-const camera = new THREE.PerspectiveCamera(82, window.innerWidth/window.innerHeight, 0.1, 280);
+const camera = new THREE.PerspectiveCamera(95, window.innerWidth/window.innerHeight, 0.1, 300);
 camera.position.set(0, 1.75, 0); camera.rotation.order = 'YXZ';
 const playerVelY = { v:0 }, onGround = { value:true };
 const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
@@ -419,9 +416,9 @@ class Bot {
     this.light.position.y += 1.25;
   }
 }
-
-const powerups = [];
+  const powerups = [];
 const pupGeo = new THREE.SphereGeometry(0.58, 12, 12);
+
 function spawnPowerup() {
   if (powerups.length >= 5) return;
   const x = 2 + Math.floor(Math.random() * (CFG.GRID - 4));
@@ -434,37 +431,50 @@ function spawnPowerup() {
   mesh.position.set(x * CFG.TILE + CFG.TILE / 2 - WH, 1.5, z * CFG.TILE + CFG.TILE / 2 - WH);
   scene.add(mesh);
   const glow = new THREE.PointLight(color, 0.9, 9);
-  glow.position.copy(mesh.position); scene.add(glow);
+  glow.position.copy(mesh.position);
+  scene.add(glow);
   powerups.push({ mesh, glow, type, life: 16, angle: Math.random() * 6 });
 }
+
 function updatePowerups(dt) {
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
-    p.life -= dt; p.angle += dt * 2.6;
+    p.life -= dt;
+    p.angle += dt * 2.6;
     p.mesh.position.y = 1.5 + Math.sin(p.angle) * 0.32;
     p.mesh.rotation.y += dt * 2.2;
     p.glow.position.copy(p.mesh.position);
     if (Math.hypot(camera.position.x - p.mesh.position.x, camera.position.z - p.mesh.position.z) < 2.0) {
-      applyPowerup('player', p.type); removePowerup(i); continue;
+      applyPowerup('player', p.type);
+      removePowerup(i);
+      continue;
     }
     for (const b of game.bots) {
       if (Math.hypot(b.mesh.position.x - p.mesh.position.x, b.mesh.position.z - p.mesh.position.z) < 2.0) {
-        applyPowerup(b.id, p.type); removePowerup(i); break;
+        applyPowerup(b.id, p.type);
+        removePowerup(i);
+        break;
       }
     }
     if (p.life <= 0) removePowerup(i);
   }
 }
+
 function removePowerup(i) {
   const p = powerups[i];
-  scene.remove(p.mesh); scene.remove(p.glow);
+  scene.remove(p.mesh);
+  scene.remove(p.glow);
   powerups.splice(i, 1);
 }
+
 function applyPowerup(target, type) {
   if (target === 'player') {
     if (type === 'speed') game.playerSpeedBoost = CFG.POWERUP_DURATION;
     if (type === 'shield') game.playerShield = CFG.POWERUP_DURATION;
-    if (type === 'bomb') { game.playerBombs = (game.playerBombs || 0) + 2; updateBombUI(); }
+    if (type === 'bomb') {
+      game.playerBombs = (game.playerBombs || 0) + 2;
+      updateBombUI();
+    }
   } else {
     const b = game.bots.find(bo => bo.id === target);
     if (!b) return;
@@ -478,6 +488,7 @@ function applyPowerup(target, type) {
 }
 
 const traps = [];
+
 function placeBomb(owner, x, z) {
   if (x < 0 || x >= CFG.GRID || z < 0 || z >= CFG.GRID) return false;
   if (traps.some(t => t.x === x && t.z === z)) return false;
@@ -489,41 +500,60 @@ function placeBomb(owner, x, z) {
   mesh.position.set(x * CFG.TILE + CFG.TILE / 2 - WH, 0.9, z * CFG.TILE + CFG.TILE / 2 - WH);
   scene.add(mesh);
   const glow = new THREE.PointLight(color, 1.2, 7);
-  glow.position.copy(mesh.position); scene.add(glow);
+  glow.position.copy(mesh.position);
+  scene.add(glow);
   traps.push({ mesh, glow, x, z, owner, fuse: CFG.BOMB_FUSE, blink: 0 });
   return true;
 }
+
 function updateTraps(dt) {
   for (let i = traps.length - 1; i >= 0; i--) {
     const t = traps[i];
-    t.fuse -= dt; t.blink += dt * 8;
+    t.fuse -= dt;
+    t.blink += dt * 8;
     const pulse = 0.6 + Math.sin(t.blink) * 0.4;
     t.mesh.material.emissiveIntensity = 0.5 + pulse * 0.8;
     t.mesh.scale.setScalar(0.9 + pulse * 0.25);
     t.glow.intensity = 0.8 + pulse * 0.8;
-    if (t.fuse <= 0) { explodeTrap(i); continue; }
+    if (t.fuse <= 0) {
+      explodeTrap(i);
+      continue;
+    }
     if (t.owner === 'player') {
       for (const b of game.bots) {
         const bi = getTileIdx(b.mesh.position.x, b.mesh.position.z);
-        if (bi && bi.x === t.x && bi.z === t.z) { explodeTrap(i); break; }
+        if (bi && bi.x === t.x && bi.z === t.z) {
+          explodeTrap(i);
+          break;
+        }
       }
     } else {
       const pi = getTileIdx(camera.position.x, camera.position.z);
-      if (pi && pi.x === t.x && pi.z === t.z && game.playerShield <= 0) explodeTrap(i);
+      if (pi && pi.x === t.x && pi.z === t.z && game.playerShield <= 0) {
+        explodeTrap(i);
+      }
     }
   }
 }
+
 function explodeTrap(i) {
-  const t = traps[i], ox = t.x, oz = t.z, owner = t.owner;
-  for (let dz = -CFG.BOMB_RADIUS; dz <= CFG.BOMB_RADIUS; dz++)
-    for (let dx = -CFG.BOMB_RADIUS; dx <= CFG.BOMB_RADIUS; dx++)
+  const t = traps[i];
+  const ox = t.x, oz = t.z, owner = t.owner;
+  for (let dz = -CFG.BOMB_RADIUS; dz <= CFG.BOMB_RADIUS; dz++) {
+    for (let dx = -CFG.BOMB_RADIUS; dx <= CFG.BOMB_RADIUS; dx++) {
       claimTile(ox + dx, oz + dz, owner, true);
+    }
+  }
   t.mesh.scale.setScalar(2.5);
   t.mesh.material.transparent = true;
   t.mesh.material.opacity = 0.3;
-  setTimeout(() => { scene.remove(t.mesh); scene.remove(t.glow); }, 120);
+  setTimeout(() => {
+    scene.remove(t.mesh);
+    scene.remove(t.glow);
+  }, 120);
   traps.splice(i, 1);
 }
+
 function tryPlacePlayerBomb() {
   if (!game.playerBombs || game.playerBombs <= 0 || game.state !== 'playing') return;
   const idx = getTileIdx(camera.position.x, camera.position.z);
@@ -533,6 +563,7 @@ function tryPlacePlayerBomb() {
     updateBombUI();
   }
 }
+
 function updateBombUI() {
   const n = game.playerBombs || 0;
   const btn = document.getElementById('bombBtn');
@@ -546,6 +577,7 @@ function updateBombUI() {
   document.getElementById('pupBomb').classList.toggle('active', n > 0);
   document.getElementById('pupBomb').textContent = n > 0 ? `💣 Bomb x${n}` : '💣 Bomb';
 }
+
 function tryJump() {
   if (game.state !== 'playing') return;
   if (onGround.value) {
@@ -685,9 +717,10 @@ actionBtn.addEventListener('touchend', e => {
 
 const bombBtn = document.getElementById('bombBtn');
 if (bombBtn) {
+  const doBomb = e => { e.preventDefault(); e.stopPropagation(); tryPlacePlayerBomb(); };
+  bombBtn.addEventListener('click', doBomb);
   bombBtn.addEventListener('touchstart', e => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     bombBtn.style.transform = 'scale(0.9)';
     tryPlacePlayerBomb();
   }, { passive: false });
@@ -705,9 +738,9 @@ document.addEventListener('keydown', e => {
 
 const jumpBtn = document.getElementById('jumpBtn');
 if (jumpBtn) {
+  jumpBtn.addEventListener('click', e => { e.preventDefault(); tryJump(); });
   jumpBtn.addEventListener('touchstart', e => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     jumpBtn.style.transform = 'scale(0.9)';
     tryJump();
   }, { passive: false });
@@ -850,14 +883,6 @@ const game = {
     } else {
       pickaxe.rotation.x = 0;
       pickaxe.position.y = 0;
-    }
-
-    const idx = getTileIdx(camera.position.x, camera.position.z);
-    if (idx && this.playerClaimCd <= 0 && tiles[idx.z][idx.x].owner === null) {
-      if (claimTile(idx.x, idx.z, 'player')) {
-        this.playerClaimCd = CFG.CLAIM_CD;
-        pickSwing = 1;
-      }
     }
 
     for (const b of this.bots) b.update(dt);
