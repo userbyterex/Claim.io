@@ -14,14 +14,19 @@
   #blocker .tagline { font-size:16px; color:#e8f4fc; margin-bottom:18px; max-width:340px; line-height:1.45; text-shadow:0 1px 4px rgba(0,0,0,0.25); }
   #blocker .keys { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:18px; }
   #blocker .key { background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); padding:7px 14px; border-radius:10px; font-size:13px; color:#fff; }
-  #btnStart, #btnHost, #btnJoin { padding:14px 28px; font-size:18px; font-weight:700; font-family:inherit; border:none; border-radius:16px; cursor:pointer; color:#fff; margin:6px; }
-  #btnStart { background:linear-gradient(135deg,#ff4d6d,#c9184a); box-shadow:0 8px 28px rgba(255,77,109,0.45); }
+  #btnStart, #btnHost, #btnJoin, #btnConfirmJoin, #btnRestart {
+    padding:16px 40px; font-size:18px; font-weight:700; font-family:inherit; border:none; border-radius:16px; cursor:pointer;
+    background:linear-gradient(135deg,#ff4d6d,#c9184a); color:#fff; box-shadow:0 8px 28px rgba(255,77,109,0.45);
+    transition:transform 0.15s; margin:6px; pointer-events:auto!important; touch-action:manipulation; position:relative; z-index:110;
+    -webkit-user-select:none; user-select:none;
+  }
   #btnHost { background:linear-gradient(135deg,#38bdf8,#0284c7); box-shadow:0 8px 28px rgba(56,189,248,0.4); }
-  #btnJoin { background:linear-gradient(135deg,#4ade80,#16a34a); box-shadow:0 8px 28px rgba(74,222,128,0.4); }
-  #btnStart:active, #btnHost:active, #btnJoin:active { transform:scale(0.95); }
-  #mpPanel { display:none; margin-top:14px; width:min(320px,90vw); }
+  #btnJoin, #btnConfirmJoin { background:linear-gradient(135deg,#4ade80,#16a34a); box-shadow:0 8px 28px rgba(74,222,128,0.4); }
+  #btnStart:active, #btnHost:active, #btnJoin:active, #btnConfirmJoin:active { transform:scale(0.95); }
+  .menu-btns { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px; pointer-events:auto; position:relative; z-index:110; }
+  #mpPanel { display:none; margin-top:14px; background:rgba(0,0,0,0.25); border-radius:14px; padding:14px 18px; max-width:320px; width:100%; }
   #mpPanel.visible { display:block; }
-  #mpPanel input { width:100%; padding:12px; border-radius:12px; border:2px solid rgba(255,255,255,0.35); background:rgba(0,0,0,0.25); color:#fff; font-size:18px; text-align:center; font-family:inherit; letter-spacing:3px; text-transform:uppercase; margin-bottom:10px; }
+  #mpPanel input { width:100%; padding:12px; border-radius:10px; border:2px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.15); color:#fff; font-size:18px; font-family:inherit; text-align:center; letter-spacing:3px; margin:8px 0; outline:none; }
   #mpPanel .mp-status { font-size:13px; color:#e8f4fc; margin-top:6px; min-height:20px; }
   #mpPanel .room-code { font-size:28px; font-weight:700; letter-spacing:6px; color:#ffd54f; }
   #blocker .chars-preview { display:flex; gap:18px; margin-top:28px; opacity:0.9; }
@@ -47,13 +52,13 @@
   #joystickZone { position:absolute; bottom:28px; left:22px; width:160px; height:160px; pointer-events:auto; }
   #joystickBase { position:absolute; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.22); top:50%; left:50%; transform:translate(-50%,-50%); }
   #joystickThumb { position:absolute; width:52px; height:52px; border-radius:50%; background:rgba(255,77,109,0.6); border:2px solid rgba(255,255,255,0.4); top:50%; left:50%; transform:translate(-50%,-50%); }
-  #actionBtn { position:absolute; bottom:40px; right:30px; width:92px; height:92px; border-radius:50%; background:rgba(255,77,109,0.35); border:3px solid rgba(255,77,109,0.75); color:#fff; font-size:13px; font-weight:700; font-family:inherit; display:flex; align-items:center; justify-content:center; pointer-events:auto; user-select:none; }
+  #actionBtn { position:absolute; bottom:40px; right:30px; width:92px; height:92px; border-radius:50%; background:rgba(255,77,109,0.35); border:3px solid rgba(255,77,109,0.75); color:#fff; font-size:13px; font-weight:700; font-family:inherit; display:flex; align-items:center; justify-content:center; pointer-events:auto; user-select:none; touch-action:manipulation; }
   #actionBtn:active { background:rgba(255,77,109,0.6); transform:scale(0.92); }
-  #bombBtn { position:fixed; bottom:140px; right:24px; width:74px; height:74px; border-radius:50%; background:rgba(248,113,113,0.55); border:3px solid #f87171; color:#fff; font-size:12px; font-weight:700; font-family:inherit; display:flex; align-items:center; justify-content:center; flex-direction:column; pointer-events:auto; user-select:none; gap:2px; z-index:25; }
+  #bombBtn { position:fixed; bottom:140px; right:24px; width:74px; height:74px; border-radius:50%; background:rgba(248,113,113,0.55); border:3px solid #f87171; color:#fff; font-size:12px; font-weight:700; font-family:inherit; display:flex; align-items:center; justify-content:center; flex-direction:column; pointer-events:auto; user-select:none; gap:2px; z-index:25; touch-action:manipulation; }
   #bombBtn.empty { opacity:0.4; }
   #bombBtn:active { background:rgba(248,113,113,0.8); transform:scale(0.92); }
   #bombBtn .count { font-size:18px; line-height:1; }
-  #jumpBtn { position:fixed; bottom:40px; right:115px; width:64px; height:64px; border-radius:50%; background:rgba(56,189,248,0.45); border:3px solid #38bdf8; color:#fff; font-size:11px; font-weight:700; font-family:inherit; display:flex; align-items:center; justify-content:center; pointer-events:auto; user-select:none; z-index:25; }
+  #jumpBtn { position:fixed; bottom:40px; right:115px; width:64px; height:64px; border-radius:50%; background:rgba(56,189,248,0.45); border:3px solid #38bdf8; color:#fff; font-size:11px; font-weight:700; font-family:inherit; display:flex; align-items:center; justify-content:center; pointer-events:auto; user-select:none; z-index:25; touch-action:manipulation; }
   #jumpBtn:active { background:rgba(56,189,248,0.7); transform:scale(0.92); }
   #camZone { position:absolute; top:70px; right:0; width:55%; height:calc(100% - 220px); pointer-events:auto; }
   #bombHint { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:rgba(12,28,48,0.75); border:1px solid rgba(248,113,113,0.5); padding:8px 18px; border-radius:12px; font-size:13px; font-weight:600; color:#f87171; z-index:15; pointer-events:none; display:none; }
@@ -62,7 +67,6 @@
   #overlayEnd.visible { display:flex; }
   #overlayEnd h2 { font-size:clamp(36px,10vw,58px); margin-bottom:10px; font-weight:700; }
   #overlayEnd p { font-size:18px; color:#b0c8d8; margin-bottom:30px; }
-  #btnRestart { padding:16px 44px; font-size:19px; font-weight:700; font-family:inherit; border:none; border-radius:16px; background:linear-gradient(135deg,#ff4d6d,#c9184a); color:#fff; cursor:pointer; }
   .hidden { display:none!important; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -71,22 +75,22 @@
 <body>
 <div id="blocker">
   <div class="logo">CLAIM.IO</div>
-  <p class="tagline">Raise walls with your pickaxe · Walls block movement · Mine to clear · Play solo or 1v1 online!</p>
+  <p class="tagline">Raise walls with your pickaxe · Walls block movement · Mine to clear · Solo or 1v1 online!</p>
   <div class="keys" id="controlsDesktop">
     <span class="key">WASD</span><span class="key">MOUSE</span><span class="key">CLICK = Mine</span><span class="key">B = Bomb</span><span class="key">SPACE = Jump</span>
   </div>
   <div class="keys hidden" id="controlsMobile">
     <span class="key">Joystick</span><span class="key">Swipe</span><span class="key">MINE</span><span class="key">💣 / JUMP</span>
   </div>
-  <div>
-    <button id="btnStart">▶  PLAY</button>
-    <button id="btnHost">🌐 HOST</button>
-    <button id="btnJoin">🔗 JOIN</button>
+  <div class="menu-btns">
+    <button id="btnStart" type="button">▶  SOLO</button>
+    <button id="btnHost" type="button">🌐 HOST</button>
+    <button id="btnJoin" type="button">🔗 JOIN</button>
   </div>
   <div id="mpPanel">
     <div class="room-code" id="roomCodeDisplay">----</div>
-    <input id="joinCodeInput" placeholder="ROOM CODE" maxlength="8" style="display:none;">
-    <button id="btnConfirmJoin" style="display:none;padding:12px 28px;font-size:16px;font-weight:700;font-family:inherit;border:none;border-radius:12px;background:linear-gradient(135deg,#4ade80,#16a34a);color:#fff;cursor:pointer;margin-top:6px;">Connect</button>
+    <input id="joinCodeInput" type="text" maxlength="6" placeholder="ROOM CODE" autocomplete="off" autocapitalize="characters">
+    <button id="btnConfirmJoin" type="button" style="width:100%;margin-top:4px;">Connect</button>
     <div class="mp-status" id="mpStatus"></div>
   </div>
   <div class="chars-preview">
@@ -117,8 +121,116 @@
 <div id="overlayEnd">
   <h2 id="endTitle">Round over!</h2>
   <p id="endText">Result</p>
-  <button id="btnRestart">Play again
-    function createGrid() {
+  <button id="btnRestart" type="button">Play again</button>
+</div>
+<script>
+const CFG = {
+  GRID:26, TILE:2.8, PLAYER_SPEED:11, BOT_SPEED:7.2, BOT_COUNT:3, ROUND_TIME:150,
+  CLAIM_CD:0.25, POWERUP_SPAWN:5.5, POWERUP_DURATION:8, BOMB_FUSE:2.6, BOMB_RADIUS:1,
+  WALL_H:1.55, FLAT_H:0.14, JUMP_FORCE:9.5, GRAVITY:22, START_BOMBS:3,
+  COLORS:{ neutral:0x8a8070, player:0xff4d6d, bot:[0x4ade80,0xfbbf24,0xa78bfa],
+    powerupSpeed:0x38bdf8, powerupShield:0xa855f7, powerupBomb:0xf87171,
+    sky:0x6EC6FF, grass:0x3d7a3a, grassFar:0x4a8a48 }
+};
+const WORLD = CFG.GRID * CFG.TILE, WH = WORLD / 2;
+const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+if (isTouch) {
+  document.body.classList.add('touch-device');
+  document.getElementById('controlsDesktop').classList.add('hidden');
+  document.getElementById('controlsMobile').classList.remove('hidden');
+} else document.body.classList.add('desktop');
+
+if (typeof THREE === 'undefined') {
+  alert('Three.js failed to load. Check your internet connection.');
+}
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(CFG.COLORS.sky);
+scene.fog = new THREE.FogExp2(0x8FD4F5, 0.006);
+const camera = new THREE.PerspectiveCamera(95, window.innerWidth/window.innerHeight, 0.1, 300);
+camera.position.set(0, 1.75, 0); camera.rotation.order = 'YXZ';
+const playerVelY = { v:0 }, onGround = { value:true };
+const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+scene.add(new THREE.AmbientLight(0xc8dff0, 0.5));
+const sun = new THREE.DirectionalLight(0xfff5e0, 1.15);
+sun.position.set(50,80,35); sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+sun.shadow.camera.left = sun.shadow.camera.bottom = -75;
+sun.shadow.camera.right = sun.shadow.camera.top = 75;
+scene.add(sun);
+const playerLight = new THREE.PointLight(CFG.COLORS.player, 1.15, 18, 1.4); scene.add(playerLight);
+const pickaxe = new THREE.Group();
+const handleMat = new THREE.MeshLambertMaterial({ color:0x6b4423 });
+const headMat = new THREE.MeshLambertMaterial({ color:0xaaaaaa, emissive:0x333333, emissiveIntensity:0.2 });
+const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.08,1.4,6), handleMat);
+handle.rotation.z = Math.PI/2; handle.position.set(0.28,-0.2,-0.55); pickaxe.add(handle);
+const pHead = new THREE.Mesh(new THREE.BoxGeometry(0.12,0.28,0.4), headMat);
+pHead.position.set(0.75,-0.2,-0.55); pickaxe.add(pHead);
+const tip = new THREE.Mesh(new THREE.ConeGeometry(0.1,0.28,5), headMat);
+tip.rotation.z = -Math.PI/2; tip.position.set(0.95,-0.2,-0.55); pickaxe.add(tip);
+pickaxe.scale.setScalar(0.85); camera.add(pickaxe); scene.add(camera);
+let pickSwing = 0;
+scene.add(new THREE.HemisphereLight(0x87CEEB, 0x3a6b3a, 0.6));
+const sunMesh = new THREE.Mesh(new THREE.SphereGeometry(6,16,12), new THREE.MeshBasicMaterial({ color:0xfff0c0 }));
+sunMesh.position.set(70,95,50); scene.add(sunMesh);
+const sunGlow = new THREE.Mesh(new THREE.SphereGeometry(9,12,10), new THREE.MeshBasicMaterial({ color:0xffe080, transparent:true, opacity:0.25 }));
+sunGlow.position.copy(sunMesh.position); scene.add(sunGlow);
+
+const clouds = [];
+function createClouds() {
+  const cloudMat = new THREE.MeshLambertMaterial({ color:0xffffff, transparent:true, opacity:0.88, depthWrite:false });
+  for (let i=0;i<26;i++) {
+    const group = new THREE.Group();
+    for (let j=0;j<4+Math.floor(Math.random()*5);j++) {
+      const s=5+Math.random()*11;
+      const sphere=new THREE.Mesh(new THREE.SphereGeometry(s,7,5), cloudMat.clone());
+      sphere.position.set((Math.random()-0.5)*18,(Math.random()-0.35)*4,(Math.random()-0.5)*10);
+      sphere.scale.y=0.4+Math.random()*0.3; group.add(sphere);
+    }
+    const angle=Math.random()*Math.PI*2, radius=70+Math.random()*90;
+    group.position.set(Math.cos(angle)*radius, 32+Math.random()*28, Math.sin(angle)*radius);
+    group.userData={ speed:0.6+Math.random()*1.4, angle, radius, bob:Math.random()*Math.PI*2 };
+    scene.add(group); clouds.push(group);
+  }
+}
+function updateClouds(dt) {
+  for (const c of clouds) {
+    c.userData.angle += dt*0.01*c.userData.speed; c.userData.bob += dt*0.35;
+    c.position.x = Math.cos(c.userData.angle)*c.userData.radius;
+    c.position.z = Math.sin(c.userData.angle)*c.userData.radius;
+    c.position.y += Math.sin(c.userData.bob)*0.015;
+  }
+}
+
+const tileGeo = new THREE.BoxGeometry(CFG.TILE*0.92, 1, CFG.TILE*0.92);
+const tiles = [];
+function setTileVisual(t, owner, animate) {
+  if (owner === null) {
+    const targetY = CFG.FLAT_H/2;
+    t.mesh.material.color.setHex(CFG.COLORS.neutral);
+    t.mesh.material.emissive.setHex(CFG.COLORS.neutral);
+    t.mesh.material.emissiveIntensity = 0.04;
+    if (animate) {
+      t.mesh.scale.y = CFG.WALL_H*0.6; t.mesh.position.y = CFG.WALL_H*0.3;
+      setTimeout(()=>{ t.mesh.scale.y=CFG.FLAT_H; t.mesh.position.y=targetY; }, 90);
+    } else { t.mesh.scale.y=CFG.FLAT_H; t.mesh.position.y=targetY; }
+  } else {
+    const color = owner==='player' ? CFG.COLORS.player
+      : (owner==='rival' ? 0x38bdf8
+      : CFG.COLORS.bot[parseInt(String(owner).replace('bot',''))||0]);
+    t.mesh.material.color.setHex(color); t.mesh.material.emissive.setHex(color);
+    t.mesh.material.emissiveIntensity = 0.4;
+    if (animate) {
+      t.mesh.scale.y=CFG.FLAT_H; t.mesh.position.y=CFG.FLAT_H/2;
+      setTimeout(()=>{ t.mesh.scale.y=CFG.WALL_H; t.mesh.position.y=CFG.WALL_H/2; }, 40);
+    } else { t.mesh.scale.y=CFG.WALL_H; t.mesh.position.y=CFG.WALL_H/2; }
+  }
+}
+  function createGrid() {
   const base = new THREE.Mesh(new THREE.PlaneGeometry(WORLD+40, WORLD+40), new THREE.MeshLambertMaterial({ color: CFG.COLORS.grass }));
   base.rotation.x = -Math.PI/2; base.position.y = -0.02; base.receiveShadow = true; scene.add(base);
   const far = new THREE.Mesh(new THREE.RingGeometry(WH+10, 200, 64), new THREE.MeshLambertMaterial({ color: CFG.COLORS.grassFar }));
@@ -151,7 +263,6 @@ function getTileIdx(px, pz) {
   return { x, z };
 }
 
-// Raised walls block EVERYONE — must mine to pass
 function canWalkAt(px, pz, who) {
   const lim = WH - 1.0;
   if (px < -lim || px > lim || pz < -lim || pz > lim) return false;
@@ -191,7 +302,6 @@ function claimTile(x, z, owner, force = false) {
   if (x < 0 || x >= CFG.GRID || z < 0 || z >= CFG.GRID) return false;
   const t = tiles[z][x];
 
-  // Own wall: mine again to LOWER it (clear path)
   if (t.owner === owner) {
     if (owner === 'player') game.playerScore = Math.max(0, game.playerScore - 1);
     else if (owner === 'rival') mp.remoteScore = Math.max(0, (mp.remoteScore || 0) - 1);
@@ -213,7 +323,6 @@ function claimTile(x, z, owner, force = false) {
     if (victimShield > 0 && !force) return false;
   }
 
-  // DESTROY enemy wall → neutral
   if (t.owner && t.owner !== owner) {
     if (t.owner === 'player') game.playerScore = Math.max(0, game.playerScore - 1);
     else if (t.owner === 'rival') mp.remoteScore = Math.max(0, (mp.remoteScore || 0) - 1);
@@ -224,7 +333,6 @@ function claimTile(x, z, owner, force = false) {
     t.owner = null; setTileVisual(t, null, true); return true;
   }
 
-  // RAISE neutral → wall
   if (t.owner === null) {
     t.owner = owner; setTileVisual(t, owner, true);
     if (owner === 'player') game.playerScore++;
@@ -385,8 +493,8 @@ class Bot {
     this.light.position.copy(this.mesh.position);
     this.light.position.y += 1.25;
   }
-}
-          const powerups = [];
+        }
+  const powerups = [];
 const pupGeo = new THREE.SphereGeometry(0.58, 12, 12);
 
 function spawnPowerup() {
@@ -543,23 +651,44 @@ const btnStart = document.getElementById('btnStart');
 const btnRestart = document.getElementById('btnRestart');
 
 function startGame() {
-  blocker.style.display = 'none';
-  isLocked = true;
-  if (game.state === 'menu' || game.state === 'ended') game.startPlaying();
-  if (!isTouch) {
-    try { renderer.domElement.requestPointerLock(); } catch (e) {}
+  try {
+    if (typeof game === 'undefined') {
+      alert('Game still loading, try again in a second');
+      return;
+    }
+    blocker.style.display = 'none';
+    isLocked = true;
+    if (game.state === 'menu' || game.state === 'ended') game.startPlaying();
+    if (!isTouch) {
+      try { renderer.domElement.requestPointerLock(); } catch (e) {}
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Start error: ' + err.message);
   }
 }
-btnStart.addEventListener('click', startGame);
-btnStart.addEventListener('touchend', e => { e.preventDefault(); startGame(); }, { passive: false });
-btnRestart.addEventListener('click', () => { game.restart(); startGame(); });
-btnRestart.addEventListener('touchend', e => {
-  e.preventDefault(); game.restart(); startGame();
-}, { passive: false });
+
+function bindTap(el, fn) {
+  if (!el) return;
+  let locked = false;
+  const run = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (locked) return;
+    locked = true;
+    try { fn(e); } finally { setTimeout(() => { locked = false; }, 350); }
+  };
+  el.addEventListener('click', run);
+  el.addEventListener('touchend', run, { passive: false });
+}
+
+bindTap(btnStart, startGame);
+bindTap(btnRestart, () => { game.restart(); startGame(); });
 
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement === renderer.domElement) {
-    isLocked = true; blocker.style.display = 'none';
+    isLocked = true;
+    blocker.style.display = 'none';
   }
 });
 
@@ -659,15 +788,7 @@ actionBtn.addEventListener('touchend', e => {
 
 const bombBtn = document.getElementById('bombBtn');
 if (bombBtn) {
-  const doBomb = e => { e.preventDefault(); e.stopPropagation(); tryPlacePlayerBomb(); };
-  bombBtn.addEventListener('click', doBomb);
-  bombBtn.addEventListener('touchstart', e => {
-    e.preventDefault(); e.stopPropagation();
-    bombBtn.style.transform = 'scale(0.9)'; tryPlacePlayerBomb();
-  }, { passive: false });
-  bombBtn.addEventListener('touchend', e => {
-    e.preventDefault(); bombBtn.style.transform = 'scale(1)';
-  }, { passive: false });
+  bindTap(bombBtn, tryPlacePlayerBomb);
 }
 
 document.addEventListener('keydown', e => {
@@ -677,17 +798,8 @@ document.addEventListener('keydown', e => {
 });
 
 const jumpBtn = document.getElementById('jumpBtn');
-if (jumpBtn) {
-  jumpBtn.addEventListener('click', e => { e.preventDefault(); tryJump(); });
-  jumpBtn.addEventListener('touchstart', e => {
-    e.preventDefault(); e.stopPropagation();
-    jumpBtn.style.transform = 'scale(0.9)'; tryJump();
-  }, { passive: false });
-  jumpBtn.addEventListener('touchend', e => {
-    e.preventDefault(); jumpBtn.style.transform = 'scale(1)';
-  }, { passive: false });
-}
-    const mp = {
+if (jumpBtn) bindTap(jumpBtn, tryJump);
+  const mp = {
   mode: 'solo',
   peer: null,
   conn: null,
@@ -829,12 +941,37 @@ function joinGame() {
   });
 }
 
-document.getElementById('btnHost').addEventListener('click', hostGame);
-document.getElementById('btnJoin').addEventListener('click', showJoinPanel);
-document.getElementById('btnConfirmJoin').addEventListener('click', joinGame);
-document.getElementById('joinCodeInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') joinGame();
+bindTap(document.getElementById('btnHost'), () => {
+  try {
+    if (typeof Peer === 'undefined') {
+      alert('PeerJS failed to load. Check internet and try again.');
+      return;
+    }
+    hostGame();
+  } catch (err) {
+    console.error(err);
+    alert('Host error: ' + err.message);
+  }
 });
+bindTap(document.getElementById('btnJoin'), showJoinPanel);
+bindTap(document.getElementById('btnConfirmJoin'), () => {
+  try {
+    if (typeof Peer === 'undefined') {
+      alert('PeerJS failed to load. Check internet and try again.');
+      return;
+    }
+    joinGame();
+  } catch (err) {
+    console.error(err);
+    alert('Join error: ' + err.message);
+  }
+});
+const joinInput = document.getElementById('joinCodeInput');
+if (joinInput) {
+  joinInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') joinGame();
+  });
+}
 
 const game = {
   state: 'menu',
@@ -1038,4 +1175,4 @@ window.addEventListener('resize', () => {
 game.init();
 </script>
 </body>
-    </html>
+</html>
