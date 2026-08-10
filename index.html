@@ -75,7 +75,7 @@
 <body>
 <div id="blocker">
   <div class="logo">CLAIM.IO</div>
-  <p class="tagline">Raise walls with your pickaxe · Walls block movement · Mine to clear · Solo or 1v1 online!</p>
+  <p class="tagline">Raise walls · Crush rivals under blocks · Mine to clear · Solo or 1v1!</p>
   <div class="keys" id="controlsDesktop">
     <span class="key">WASD</span><span class="key">MOUSE</span><span class="key">CLICK = Mine</span><span class="key">B = Bomb</span><span class="key">SPACE = Jump</span>
   </div>
@@ -139,10 +139,7 @@ if (isTouch) {
   document.getElementById('controlsDesktop').classList.add('hidden');
   document.getElementById('controlsMobile').classList.remove('hidden');
 } else document.body.classList.add('desktop');
-
-if (typeof THREE === 'undefined') {
-  alert('Three.js failed to load. Check your internet connection.');
-}
+if (typeof THREE === 'undefined') alert('Three.js failed to load. Check internet.');
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(CFG.COLORS.sky);
@@ -288,6 +285,40 @@ function tryMoveEntity(pos, dx, dz, who) {
   return false;
 }
 
+function ejectFromTile(tileX, tileZ, pos, who) {
+  const standing = getTileIdx(pos.x, pos.z);
+  if (!standing || standing.x !== tileX || standing.z !== tileZ) return;
+  if (!tiles[tileZ][tileX].owner) return;
+  const forward = new THREE.Vector3();
+  if (who === 'player') {
+    camera.getWorldDirection(forward);
+    forward.y = 0;
+    if (forward.lengthSq() > 0.001) forward.normalize();
+  }
+  const dirs = [
+    [-Math.round(forward.x)||0, -Math.round(forward.z)||0],
+    [Math.round(forward.x)||0, Math.round(forward.z)||0],
+    [0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]
+  ];
+  const candidates = [];
+  for (const [dx, dz] of dirs) {
+    if (dx === 0 && dz === 0) continue;
+    const nx = tileX + dx, nz = tileZ + dz;
+    if (nx < 0 || nx >= CFG.GRID || nz < 0 || nz >= CFG.GRID) continue;
+    if (tiles[nz][nx].owner) continue;
+    const wx = nx * CFG.TILE + CFG.TILE / 2 - WH;
+    const wz = nz * CFG.TILE + CFG.TILE / 2 - WH;
+    if (canWalkAt(wx, wz, who)) candidates.push({ wx, wz, dist: Math.hypot(wx - pos.x, wz - pos.z) });
+  }
+  if (!candidates.length) {
+    const bx = pos.x - forward.x * CFG.TILE, bz = pos.z - forward.z * CFG.TILE;
+    if (canWalkAt(bx, bz, who)) { pos.x = bx; pos.z = bz; }
+    return;
+  }
+  candidates.sort((a, b) => a.dist - b.dist);
+  pos.x = candidates[0].wx; pos.z = candidates[0].wz;
+}
+
 function isAdjacentTo(x, z, owner) {
   for (let dz = -1; dz <= 1; dz++)
     for (let dx = -1; dx <= 1; dx++) {
@@ -341,9 +372,55 @@ function claimTile(x, z, owner, force = false) {
       const b = game.bots.find(bo => bo.id === owner);
       if (b) b.score++;
     }
+    crushOccupants(x, z, owner);
     return true;
   }
   return false;
+}
+
+function findRespawnPos() {
+  for (let attempt = 0; attempt < 80; attempt++) {
+    const x = Math.floor(Math.random() * CFG.GRID);
+    const z = Math.floor(Math.random() * CFG.GRID);
+    if (tiles[z][x].owner) continue;
+    const wx = x * CFG.TILE + CFG.TILE / 2 - WH;
+    const wz = z * CFG.TILE + CFG.TILE / 2 - WH;
+    if (canWalkAt(wx, wz, 'player')) return { x: wx, z: wz, tx: x, tz: z };
+  }
+  return { x: 0, z: 0, tx: Math.floor(CFG.GRID / 2), tz: Math.floor(CFG.GRID / 2) };
+}
+
+function respawnPlayer() {
+  const p = findRespawnPos();
+  camera.position.x = p.x; camera.position.z = p.z; camera.position.y = 1.75;
+  playerVelY.v = 0; onGround.value = true;
+  game.playerShield = Math.max(game.playerShield, 1.5);
+  playerLight.intensity = 3;
+  setTimeout(() => { playerLight.intensity = 1.15; }, 400);
+}
+
+function respawnBot(bot) {
+  if (!bot) return;
+  const p = findRespawnPos();
+  bot.mesh.position.x = p.x; bot.mesh.position.z = p.z; bot.mesh.position.y = 0;
+  bot.tx = p.tx; bot.tz = p.tz; bot.targetX = p.tx; bot.targetZ = p.tz;
+  bot.shield = Math.max(bot.shield, 1.2); bot.claimCd = 0.5;
+}
+
+function crushOccupants(tileX, tileZ, raisedBy) {
+  if (raisedBy !== 'player') {
+    const pi = getTileIdx(camera.position.x, camera.position.z);
+    if (pi && pi.x === tileX && pi.z === tileZ && game.playerShield <= 0) respawnPlayer();
+  }
+  for (const b of game.bots) {
+    if (b.id === raisedBy || b.shield > 0) continue;
+    const bi = getTileIdx(b.mesh.position.x, b.mesh.position.z);
+    if (bi && bi.x === tileX && bi.z === tileZ) respawnBot(b);
+  }
+  if (raisedBy === 'player' && mp.ready && mp.remoteMesh) {
+    const ri = getTileIdx(mp.remoteMesh.position.x, mp.remoteMesh.position.z);
+    if (ri && ri.x === tileX && ri.z === tileZ) mpSend({ t: 'crush' });
+  }
 }
 
 function createCalamar(colorHex) {
@@ -483,6 +560,7 @@ class Bot {
       this.tx = this.targetX; this.tz = this.targetZ;
       if (this.claimCd <= 0) {
         claimTile(this.tx, this.tz, this.id);
+        ejectFromTile(this.tx, this.tz, this.mesh.position, this.id);
         if ((this.bombs||0) > 0 && Math.random() < 0.35) {
           if (placeBomb(this.id, this.tx, this.tz)) this.bombs--;
         }
@@ -720,6 +798,7 @@ function tryClaimPlayer() {
     if (idx && claimTile(idx.x, idx.z, 'player', false)) {
       game.playerClaimCd = CFG.CLAIM_CD;
       pickSwing = 1;
+      ejectFromTile(idx.x, idx.z, camera.position, 'player');
       mpSend({ t: 'claim', x: idx.x, z: idx.z, owner: 'rival', force: false });
     }
   }
@@ -787,9 +866,7 @@ actionBtn.addEventListener('touchend', e => {
 }, { passive: false });
 
 const bombBtn = document.getElementById('bombBtn');
-if (bombBtn) {
-  bindTap(bombBtn, tryPlacePlayerBomb);
-}
+if (bombBtn) bindTap(bombBtn, tryPlacePlayerBomb);
 
 document.addEventListener('keydown', e => {
   if (game.state !== 'playing') return;
@@ -848,6 +925,9 @@ function mpOnData(data) {
     if (mp.remoteLight) mp.remoteLight.position.set(data.x, 1.2, data.z);
   } else if (data.t === 'claim') {
     claimTile(data.x, data.z, data.owner, !!data.force);
+    ejectFromTile(data.x, data.z, camera.position, 'player');
+  } else if (data.t === 'crush') {
+    if (game.playerShield <= 0) respawnPlayer();
   } else if (data.t === 'bomb') {
     placeBomb(data.owner, data.x, data.z);
   } else if (data.t === 'score') {
@@ -1101,6 +1181,11 @@ const game = {
     } else {
       pickaxe.rotation.x = 0;
       pickaxe.position.y = 0;
+    }
+
+    const feet = getTileIdx(camera.position.x, camera.position.z);
+    if (feet && tiles[feet.z][feet.x].owner) {
+      ejectFromTile(feet.x, feet.z, camera.position, 'player');
     }
 
     for (const b of this.bots) b.update(dt);
