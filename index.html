@@ -378,6 +378,7 @@
     <button id="btnSaveScore" type="button" style="width:100%;margin-top:4px;padding:12px;font-size:15px;font-weight:700;font-family:inherit;border:none;border-radius:12px;background:linear-gradient(135deg,#4ade80,#16a34a);color:#fff;cursor:pointer;">Save score</button>
   </div>
   <button id="btnRestart" type="button">Play again</button>
+  <button id="btnShareScore" type="button" style="margin-top:10px;padding:12px 28px;font-size:15px;font-weight:700;font-family:inherit;border:none;border-radius:12px;background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;cursor:pointer;">📤 Share score</button>
   <button id="btnShowRankEnd" type="button" style="margin-top:10px;padding:10px 24px;font-size:14px;font-weight:700;font-family:inherit;border:2px solid rgba(255,255,255,0.3);border-radius:12px;background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;">🏆 Ranking</button>
 </div>
 <div id="rankPanel">
@@ -387,8 +388,8 @@
 </div>
 <script>
 const CFG = {
-  GRID:26, TILE:2.8, PLAYER_SPEED:11, BOT_SPEED:7.2, BOT_COUNT:3, ROUND_TIME:120,
-  CLAIM_CD:0.25, POWERUP_SPAWN:5.5, POWERUP_DURATION:8, BOMB_FUSE:2.6, BOMB_RADIUS:1,
+  GRID:26, TILE:2.8, PLAYER_SPEED:12.5, BOT_SPEED:7.2, BOT_COUNT:3, ROUND_TIME:90,
+  CLAIM_CD:0.12, POWERUP_SPAWN:4.5, POWERUP_DURATION:8, BOMB_FUSE:2.2, BOMB_RADIUS:1,
   WALL_H:1.55, FLAT_H:0.14, JUMP_FORCE:9.5, GRAVITY:22, START_BOMBS:3,
   COLORS:{ neutral:0x8a8070, player:0xff4d6d, bot:[0x4ade80,0xfbbf24,0xa78bfa,0x94a3b8],
     powerupSpeed:0x38bdf8, powerupShield:0xa855f7, powerupBomb:0xf87171,
@@ -421,7 +422,7 @@ const MAP_BY_LEAGUE = {
   master:   { id:'throne',   name:'Throne Arena',    grid:32, bots:4, botSpeed:8.8, round:80,  pup:3.0, rocky:0.18, hazard:12,   island:true,  bombs:5 }
 };
 
-const CASUAL_MAP = { id:'casual', name:'Classic Arena', grid:26, bots:3, botSpeed:7.2, round:120, pup:5.5, rocky:0, hazard:0, island:false, bombs:3 };
+const CASUAL_MAP = { id:'casual', name:'Classic Arena', grid:26, bots:3, botSpeed:7.2, round:90, pup:4.5, rocky:0, hazard:0, island:false, bombs:4 };
 
 const progression = {
   mmr: 1000,
@@ -750,19 +751,29 @@ function getTileIdx(px, pz) {
   return { x, z };
 }
 
+function isBlockingOwner(owner, who) {
+  if (!owner) return false;
+  // Your own walls never block you
+  if (who === 'player' && owner === 'player') return false;
+  if (who === 'rival' && owner === 'rival') return false;
+  if (String(who).startsWith('bot') && owner === who) return false;
+  // Blocked/void tiles
+  return true;
+}
+
 function canWalkAt(px, pz, who) {
-  const lim = WH - 1.0;
+  const lim = WH - 0.6;
   if (px < -lim || px > lim || pz < -lim || pz > lim) return false;
-  const r = 0.55;
+  const r = 0.42; // smaller radius = less sticky corners
   const samples = [
-    [px, pz], [px+r, pz], [px-r, pz], [px, pz+r], [px, pz-r],
-    [px+r*0.7, pz+r*0.7], [px-r*0.7, pz+r*0.7],
-    [px+r*0.7, pz-r*0.7], [px-r*0.7, pz-r*0.7]
+    [px, pz], [px + r, pz], [px - r, pz], [px, pz + r], [px, pz - r]
   ];
   for (const [sx, sz] of samples) {
     const idx = getTileIdx(sx, sz);
     if (!idx) return false;
-    if (tiles[idx.z][idx.x].owner) return false;
+    const t = tiles[idx.z] && tiles[idx.z][idx.x];
+    if (!t || t.blocked) return false;
+    if (isBlockingOwner(t.owner, who)) return false;
   }
   return true;
 }
@@ -770,43 +781,60 @@ function canWalkAt(px, pz, who) {
 function tryMoveEntity(pos, dx, dz, who) {
   const nx = pos.x + dx, nz = pos.z + dz;
   if (canWalkAt(nx, nz, who)) { pos.x = nx; pos.z = nz; return true; }
+  // Slide along walls
   if (Math.abs(dx) > 0.0001 && canWalkAt(pos.x + dx, pos.z, who)) { pos.x += dx; return true; }
   if (Math.abs(dz) > 0.0001 && canWalkAt(pos.x, pos.z + dz, who)) { pos.z += dz; return true; }
+  // Corner slide: half step
+  if (Math.abs(dx) > 0.0001 && canWalkAt(pos.x + dx * 0.5, pos.z, who)) { pos.x += dx * 0.5; return true; }
+  if (Math.abs(dz) > 0.0001 && canWalkAt(pos.x, pos.z + dz * 0.5, who)) { pos.z += dz * 0.5; return true; }
   return false;
+}
+
+function findNearestFreePos(fromX, fromZ, who) {
+  const origin = getTileIdx(fromX, fromZ) || { x: Math.floor(CFG.GRID / 2), z: Math.floor(CFG.GRID / 2) };
+  for (let radius = 0; radius <= 8; radius++) {
+    for (let dz = -radius; dz <= radius; dz++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (radius > 0 && Math.max(Math.abs(dx), Math.abs(dz)) !== radius) continue;
+        const tx = origin.x + dx, tz = origin.z + dz;
+        if (tx < 0 || tz < 0 || tx >= CFG.GRID || tz >= CFG.GRID) continue;
+        const t = tiles[tz] && tiles[tz][tx];
+        if (!t || t.blocked || !t.mesh) continue;
+        if (isBlockingOwner(t.owner, who)) continue;
+        const wx = tx * CFG.TILE + CFG.TILE / 2 - WH;
+        const wz = tz * CFG.TILE + CFG.TILE / 2 - WH;
+        if (canWalkAt(wx, wz, who)) return { x: wx, z: wz, tx, tz };
+      }
+    }
+  }
+  return { x: 0, z: 0, tx: Math.floor(CFG.GRID / 2), tz: Math.floor(CFG.GRID / 2) };
+}
+
+function unstuckEntity(pos, who) {
+  if (canWalkAt(pos.x, pos.z, who)) return false;
+  const free = findNearestFreePos(pos.x, pos.z, who);
+  pos.x = free.x;
+  pos.z = free.z;
+  return true;
 }
 
 function ejectFromTile(tileX, tileZ, pos, who) {
   const standing = getTileIdx(pos.x, pos.z);
-  if (!standing || standing.x !== tileX || standing.z !== tileZ) return;
-  if (!tiles[tileZ][tileX].owner) return;
-  const forward = new THREE.Vector3();
-  if (who === 'player') {
-    camera.getWorldDirection(forward);
-    forward.y = 0;
-    if (forward.lengthSq() > 0.001) forward.normalize();
-  }
-  const dirs = [
-    [-Math.round(forward.x)||0, -Math.round(forward.z)||0],
-    [Math.round(forward.x)||0, Math.round(forward.z)||0],
-    [0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]
-  ];
-  const candidates = [];
-  for (const [dx, dz] of dirs) {
-    if (dx === 0 && dz === 0) continue;
-    const nx = tileX + dx, nz = tileZ + dz;
-    if (nx < 0 || nx >= CFG.GRID || nz < 0 || nz >= CFG.GRID) continue;
-    if (tiles[nz][nx].owner) continue;
-    const wx = nx * CFG.TILE + CFG.TILE / 2 - WH;
-    const wz = nz * CFG.TILE + CFG.TILE / 2 - WH;
-    if (canWalkAt(wx, wz, who)) candidates.push({ wx, wz, dist: Math.hypot(wx - pos.x, wz - pos.z) });
-  }
-  if (!candidates.length) {
-    const bx = pos.x - forward.x * CFG.TILE, bz = pos.z - forward.z * CFG.TILE;
-    if (canWalkAt(bx, bz, who)) { pos.x = bx; pos.z = bz; }
+  if (!standing) return;
+  // Always free if current tile is enemy-owned or blocked
+  const cur = tiles[standing.z] && tiles[standing.z][standing.x];
+  if (cur && isBlockingOwner(cur.owner, who)) {
+    const free = findNearestFreePos(pos.x, pos.z, who);
+    pos.x = free.x; pos.z = free.z;
     return;
   }
-  candidates.sort((a, b) => a.dist - b.dist);
-  pos.x = candidates[0].wx; pos.z = candidates[0].wz;
+  if (standing.x !== tileX || standing.z !== tileZ) return;
+  if (!tiles[tileZ] || !tiles[tileZ][tileX] || !tiles[tileZ][tileX].owner) return;
+  if (!isBlockingOwner(tiles[tileZ][tileX].owner, who) && tiles[tileZ][tileX].owner === who) {
+    // Standing on own wall after raising — nudge off
+    const free = findNearestFreePos(pos.x, pos.z, who);
+    pos.x = free.x; pos.z = free.z;
+  }
 }
 
 function isAdjacentTo(x, z, owner) {
@@ -1098,12 +1126,21 @@ function pushKillFeed(text, pts) {
 }
 
 function awardKill(victimName) {
-  const pts = 25;
+  const now = performance.now();
+  if (!game._lastKillAt || now - game._lastKillAt > 6000) game.streak = 0;
+  game.streak = (game.streak || 0) + 1;
+  game._lastKillAt = now;
+  const streak = game.streak;
+  const pts = 25 + Math.min(50, (streak - 1) * 10);
   game.kills = (game.kills || 0) + 1;
   game.points = (game.points || 0) + pts;
   const name = victimName || 'Rival';
-  showKillToast(`${name} eliminated · +${pts} pts`);
-  pushKillFeed(`${name} eliminated`, pts);
+  let msg = `${name} eliminated · +${pts}`;
+  if (streak === 2) msg = `🔥 DOUBLE · ${name} · +${pts}`;
+  else if (streak === 3) msg = `⚡ TRIPLE · ${name} · +${pts}`;
+  else if (streak >= 4) msg = `👑 STREAK x${streak} · ${name} · +${pts}`;
+  showKillToast(msg);
+  pushKillFeed(streak >= 2 ? `STREAK x${streak} · ${name}` : `${name} eliminated`, pts);
 }
 
 function respawnPlayer(fromKill) {
@@ -1714,10 +1751,27 @@ bindTap(btnRestart, () => {
   document.getElementById('namePrompt')?.classList.remove('visible');
   document.getElementById('overlayEnd')?.classList.remove('visible');
   game.restart();
-  // Stay in ranked if last mode was ranked
   if (CFG.ranked) startRankedMatch();
   else startCasualMatch();
 });
+
+function shareScore() {
+  const k = game.kills || 0;
+  const walls = game.playerScore || 0;
+  const pts = (game.points || 0) + walls * 10;
+  const text = `I scored ${pts} pts in Claim.io 🧱 ${walls} walls · ${k} kills\nPlay free → ${location.origin}${location.pathname}`;
+  if (navigator.share) {
+    navigator.share({ title: 'Claim.io', text }).catch(() => {});
+  } else {
+    try {
+      navigator.clipboard.writeText(text);
+      showKillToast('Link copied!');
+    } catch (e) {
+      prompt('Copy & share:', text);
+    }
+  }
+}
+bindTap(document.getElementById('btnShareScore'), shareScore);
 bindTap(document.getElementById('rankBtn'), showRankPanel);
 bindTap(document.getElementById('btnCloseRank'), hideRankPanel);
 bindTap(document.getElementById('btnShowRankEnd'), showRankPanel);
@@ -1845,20 +1899,42 @@ document.addEventListener('mousemove', e => {
 
 function tryClaimPlayer() {
   if (game.playerClaimCd > 0) return;
+  // Prefer tile under crosshair, then under feet, then adjacent in look direction
+  const candidates = [];
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
   const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -1.0);
   const target = new THREE.Vector3();
   if (raycaster.ray.intersectPlane(plane, target)) {
-    if (Math.hypot(target.x - camera.position.x, target.z - camera.position.z) > 9) return;
-    const idx = getTileIdx(target.x, target.z);
-    if (idx && claimTile(idx.x, idx.z, 'player', false)) {
+    if (Math.hypot(target.x - camera.position.x, target.z - camera.position.z) <= 10) {
+      const idx = getTileIdx(target.x, target.z);
+      if (idx) candidates.push(idx);
+    }
+  }
+  const feet = getTileIdx(camera.position.x, camera.position.z);
+  if (feet) candidates.push(feet);
+  const forward = new THREE.Vector3();
+  camera.getWorldDirection(forward);
+  forward.y = 0;
+  if (forward.lengthSq() > 0.01) {
+    forward.normalize();
+    const fx = camera.position.x + forward.x * CFG.TILE;
+    const fz = camera.position.z + forward.z * CFG.TILE;
+    const ahead = getTileIdx(fx, fz);
+    if (ahead) candidates.push(ahead);
+  }
+  for (const idx of candidates) {
+    if (!idx) continue;
+    if (claimTile(idx.x, idx.z, 'player', false)) {
       game.playerClaimCd = CFG.CLAIM_CD;
       pickSwing = 1;
       ejectFromTile(idx.x, idx.z, camera.position, 'player');
+      unstuckEntity(camera.position, 'player');
       mpSend({ t: 'claim', x: idx.x, z: idx.z, owner: 'rival', force: false });
+      return true;
     }
   }
+  return false;
 }
 
 let joy = { active: false, id: null, sx: 0, sy: 0, dx: 0, dy: 0 };
@@ -2045,7 +2121,15 @@ function hostGame() {
   document.getElementById('btnConfirmJoin').style.display = 'none';
   const code = makeRoomCode();
   document.getElementById('roomCodeDisplay').textContent = code;
-  mpStatus('Creating room...');
+  // Shareable room link
+  try {
+    const url = location.origin + location.pathname + '?room=' + code;
+    history.replaceState(null, '', '?room=' + code);
+    mpStatus('Room ready · share link or code');
+    if (navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
+  } catch (e) {
+    mpStatus('Creating room...');
+  }
   mp.mode = 'host';
   mp.myId = 'claimio-' + code;
   if (mp.peer) try { mp.peer.destroy(); } catch (e) {}
@@ -2316,7 +2400,30 @@ const game = {
 
     if (move.lengthSq() > 0) {
       move.normalize().multiplyScalar(speed * dt);
-      tryMoveEntity(camera.position, move.x, move.z, 'player');
+      const moved = tryMoveEntity(camera.position, move.x, move.z, 'player');
+      if (!moved) {
+        // Pushing into a wall: try to auto-break nearest enemy tile in move dir
+        this._pushAcc = (this._pushAcc || 0) + dt;
+        if (this._pushAcc > 0.35) {
+          this._pushAcc = 0;
+          const ahead = getTileIdx(camera.position.x + move.x * 8, camera.position.z + move.z * 8);
+          if (ahead && tiles[ahead.z] && tiles[ahead.z][ahead.x] && isBlockingOwner(tiles[ahead.z][ahead.x].owner, 'player')) {
+            claimTile(ahead.x, ahead.z, 'player', false);
+            pickSwing = 1;
+          }
+        }
+      } else {
+        this._pushAcc = 0;
+      }
+    }
+
+    // Never stay stuck inside a wall
+    this._stuckCheck = (this._stuckCheck || 0) + dt;
+    if (this._stuckCheck > 0.4) {
+      this._stuckCheck = 0;
+      if (unstuckEntity(camera.position, 'player')) {
+        // silent recovery
+      }
     }
 
     const eyeH = 1.75;
@@ -2536,6 +2643,24 @@ window.addEventListener('resize', () => {
 });
 
 game.init();
+
+// Deep link: ?room=CODE joins automatically
+(function deepLinkRoom() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const room = (params.get('room') || '').toUpperCase().trim();
+    if (room.length >= 4) {
+      setTimeout(() => {
+        requireAuth();
+        showJoinPanel();
+        const input = document.getElementById('joinCodeInput');
+        if (input) input.value = room;
+        mpStatus('Joining ' + room + '…');
+        joinGame();
+      }, 600);
+    }
+  } catch (e) {}
+})();
 </script>
 </body>
 </html>
