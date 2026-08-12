@@ -790,20 +790,40 @@ function tryMoveEntity(pos, dx, dz, who) {
   return false;
 }
 
-function findNearestFreePos(fromX, fromZ, who) {
+// Prefer truly empty tiles (owner null). Own walls are walkable but we still
+// want to DISPLACE off a tile we just raised onto.
+function findNearestEmptyPos(fromX, fromZ, who, excludeX, excludeZ) {
   const origin = getTileIdx(fromX, fromZ) || { x: Math.floor(CFG.GRID / 2), z: Math.floor(CFG.GRID / 2) };
-  for (let radius = 0; radius <= 8; radius++) {
+  for (let radius = 1; radius <= 10; radius++) { // start at 1 = never stay on same tile
     for (let dz = -radius; dz <= radius; dz++) {
       for (let dx = -radius; dx <= radius; dx++) {
-        if (radius > 0 && Math.max(Math.abs(dx), Math.abs(dz)) !== radius) continue;
+        if (Math.max(Math.abs(dx), Math.abs(dz)) !== radius) continue;
         const tx = origin.x + dx, tz = origin.z + dz;
         if (tx < 0 || tz < 0 || tx >= CFG.GRID || tz >= CFG.GRID) continue;
+        if (excludeX != null && tx === excludeX && tz === excludeZ) continue;
+        const t = tiles[tz] && tiles[tz][tx];
+        if (!t || t.blocked || !t.mesh) continue;
+        if (t.owner != null) continue; // must be empty ground
+        const wx = tx * CFG.TILE + CFG.TILE / 2 - WH;
+        const wz = tz * CFG.TILE + CFG.TILE / 2 - WH;
+        return { x: wx, z: wz, tx, tz };
+      }
+    }
+  }
+  // Fallback: any non-enemy tile including own walls
+  for (let radius = 1; radius <= 10; radius++) {
+    for (let dz = -radius; dz <= radius; dz++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dz)) !== radius) continue;
+        const tx = origin.x + dx, tz = origin.z + dz;
+        if (tx < 0 || tz < 0 || tx >= CFG.GRID || tz >= CFG.GRID) continue;
+        if (excludeX != null && tx === excludeX && tz === excludeZ) continue;
         const t = tiles[tz] && tiles[tz][tx];
         if (!t || t.blocked || !t.mesh) continue;
         if (isBlockingOwner(t.owner, who)) continue;
         const wx = tx * CFG.TILE + CFG.TILE / 2 - WH;
         const wz = tz * CFG.TILE + CFG.TILE / 2 - WH;
-        if (canWalkAt(wx, wz, who)) return { x: wx, z: wz, tx, tz };
+        return { x: wx, z: wz, tx, tz };
       }
     }
   }
@@ -811,29 +831,49 @@ function findNearestFreePos(fromX, fromZ, who) {
 }
 
 function unstuckEntity(pos, who) {
-  if (canWalkAt(pos.x, pos.z, who)) return false;
-  const free = findNearestFreePos(pos.x, pos.z, who);
+  const standing = getTileIdx(pos.x, pos.z);
+  // Stuck only if on enemy wall / void / outside
+  if (standing) {
+    const t = tiles[standing.z] && tiles[standing.z][standing.x];
+    if (t && !t.blocked && !isBlockingOwner(t.owner, who)) {
+      // On empty or own wall — not "stuck" for movement
+      if (canWalkAt(pos.x, pos.z, who)) return false;
+    }
+  } else if (canWalkAt(pos.x, pos.z, who)) {
+    return false;
+  }
+  const free = findNearestEmptyPos(pos.x, pos.z, who);
   pos.x = free.x;
   pos.z = free.z;
   return true;
 }
 
+/** Push entity off a tile after a wall is raised there (displace, never soft-lock). */
+function displaceOffTile(tileX, tileZ, pos, who) {
+  const standing = getTileIdx(pos.x, pos.z);
+  if (!standing) return;
+  if (standing.x !== tileX || standing.z !== tileZ) return;
+  const free = findNearestEmptyPos(pos.x, pos.z, who, tileX, tileZ);
+  pos.x = free.x;
+  pos.z = free.z;
+}
+
 function ejectFromTile(tileX, tileZ, pos, who) {
   const standing = getTileIdx(pos.x, pos.z);
   if (!standing) return;
-  // Always free if current tile is enemy-owned or blocked
   const cur = tiles[standing.z] && tiles[standing.z][standing.x];
+  // Enemy wall under feet → force off
   if (cur && isBlockingOwner(cur.owner, who)) {
-    const free = findNearestFreePos(pos.x, pos.z, who);
+    const free = findNearestEmptyPos(pos.x, pos.z, who, standing.x, standing.z);
     pos.x = free.x; pos.z = free.z;
     return;
   }
-  if (standing.x !== tileX || standing.z !== tileZ) return;
-  if (!tiles[tileZ] || !tiles[tileZ][tileX] || !tiles[tileZ][tileX].owner) return;
-  if (!isBlockingOwner(tiles[tileZ][tileX].owner, who) && tiles[tileZ][tileX].owner === who) {
-    // Standing on own wall after raising — nudge off
-    const free = findNearestFreePos(pos.x, pos.z, who);
-    pos.x = free.x; pos.z = free.z;
+  // Own (or any) wall just raised on this tile → displace
+  if (standing.x === tileX && standing.z === tileZ) {
+    const raised = tiles[tileZ] && tiles[tileZ][tileX];
+    if (raised && raised.owner) {
+      displaceOffTile(tileX, tileZ, pos, who);
+    }
   }
 }
 
@@ -903,6 +943,14 @@ function claimTile(x, z, owner, force = false) {
       if (b) b.score++;
     }
     crushOccupants(x, z, owner);
+    // Raising a wall under yourself → always DISPLACE off that tile
+    displaceOffTile(x, z, camera.position, 'player');
+    for (const b of game.bots) {
+      const bi = getTileIdx(b.mesh.position.x, b.mesh.position.z);
+      if (bi && bi.x === x && bi.z === z) {
+        displaceOffTile(x, z, b.mesh.position, b.id);
+      }
+    }
     return true;
   }
   return false;
@@ -2449,8 +2497,9 @@ const game = {
       pickaxe.position.y = 0;
     }
 
+    // Only enemy walls force eject every frame — own walls are walkable / displace-on-raise
     const feet = getTileIdx(camera.position.x, camera.position.z);
-    if (feet && tiles[feet.z] && tiles[feet.z][feet.x] && tiles[feet.z][feet.x].owner) {
+    if (feet && tiles[feet.z] && tiles[feet.z][feet.x] && isBlockingOwner(tiles[feet.z][feet.x].owner, 'player')) {
       ejectFromTile(feet.x, feet.z, camera.position, 'player');
     }
 
