@@ -29,8 +29,77 @@
   #mpPanel input { width:100%; padding:12px; border-radius:10px; border:2px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.15); color:#fff; font-size:18px; font-family:inherit; text-align:center; letter-spacing:3px; margin:8px 0; outline:none; }
   #mpPanel .mp-status { font-size:13px; color:#e8f4fc; margin-top:6px; min-height:20px; }
   #mpPanel .room-code { font-size:28px; font-weight:700; letter-spacing:6px; color:#ffd54f; }
-  #blocker .chars-preview { display:flex; gap:18px; margin-top:28px; opacity:0.9; }
-  #blocker .char-card { width:64px; height:64px; border-radius:14px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; font-size:28px; }
+  #blocker .chars-preview { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center; }
+  #blocker .char-card {
+    width:72px; height:78px; border-radius:14px; background:rgba(255,255,255,0.12);
+    border:2px solid rgba(255,255,255,0.25); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-size:26px; cursor:pointer;
+    transition:transform 0.15s, border-color 0.15s, background 0.15s; user-select:none;
+  }
+  #blocker .char-card:hover { transform:scale(1.06); background:rgba(255,255,255,0.2); }
+  #blocker .char-card.selected { border-color:#ffd54f; background:rgba(255,213,79,0.2); box-shadow:0 0 16px rgba(255,213,79,0.35); }
+  #blocker .char-card .char-label { font-size:10px; font-weight:700; margin-top:2px; color:#e8f4fc; }
+  #customPanel {
+    margin-top:12px; background:rgba(0,0,0,0.22); border-radius:14px; padding:12px 14px;
+    max-width:340px; width:100%;
+  }
+  #customPanel .section-label { font-size:12px; color:#c8dce8; margin:6px 0 6px; font-weight:600; text-align:left; }
+  .color-row { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:4px; }
+  .color-swatch {
+    width:28px; height:28px; border-radius:50%; border:2px solid rgba(255,255,255,0.35);
+    cursor:pointer; transition:transform 0.12s, box-shadow 0.12s;
+  }
+  .color-swatch:hover { transform:scale(1.12); }
+  .color-swatch.selected { border-color:#fff; box-shadow:0 0 0 2px #ffd54f; }
+  .pick-row { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .pick-btn {
+    padding:6px 12px; border-radius:10px; border:2px solid rgba(255,255,255,0.25);
+    background:rgba(255,255,255,0.1); color:#fff; font-size:12px; font-weight:700;
+    font-family:inherit; cursor:pointer;
+  }
+  .pick-btn.selected { border-color:#ffd54f; background:rgba(255,213,79,0.25); }
+  #btnRanked {
+    padding:16px 28px; font-size:17px; font-weight:700; border:none; border-radius:16px;
+    background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff; cursor:pointer;
+    box-shadow:0 6px 24px rgba(245,158,11,0.45); font-family:inherit; touch-action:manipulation;
+  }
+  #btnRanked:disabled { opacity:0.45; cursor:not-allowed; }
+  #rankedPanel {
+    margin-top:10px; background:rgba(0,0,0,0.28); border:1px solid rgba(255,213,79,0.35);
+    border-radius:14px; padding:12px 14px; max-width:340px; width:100%; text-align:left;
+  }
+  #rankedPanel .league-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  #rankedPanel .league-badge {
+    font-size:22px; width:44px; height:44px; border-radius:12px; display:flex;
+    align-items:center; justify-content:center; background:rgba(255,255,255,0.12);
+  }
+  #rankedPanel .league-info { flex:1; }
+  #rankedPanel .league-name { font-weight:800; font-size:16px; color:#ffd54f; }
+  #rankedPanel .league-sub { font-size:12px; color:#c8dce8; }
+  #rankedPanel .xp-bar {
+    height:8px; background:rgba(255,255,255,0.15); border-radius:4px; overflow:hidden; margin:6px 0;
+  }
+  #rankedPanel .xp-fill { height:100%; background:linear-gradient(90deg,#38bdf8,#a78bfa); border-radius:4px; transition:width 0.3s; }
+  #rankedPanel .map-hint { font-size:11px; color:#a8c0d0; margin-top:4px; }
+  #hudLeague {
+    position:fixed; top:58px; left:12px; z-index:25; background:rgba(0,0,0,0.45);
+    border:1px solid rgba(255,213,79,0.4); border-radius:10px; padding:4px 10px;
+    font-size:12px; font-weight:700; color:#ffd54f; display:none;
+  }
+  body.touch-device #hudLeague { top:auto; bottom:118px; left:12px; }
+  #matchmakingOverlay {
+    position:fixed; inset:0; z-index:200; background:rgba(10,20,40,0.85);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    color:#fff; font-family:inherit;
+  }
+  #matchmakingOverlay.visible { display:flex; }
+  #matchmakingOverlay .mm-title { font-size:28px; font-weight:800; margin-bottom:8px; }
+  #matchmakingOverlay .mm-sub { color:#a8c0d0; margin-bottom:20px; }
+  #matchmakingOverlay .mm-spin {
+    width:48px; height:48px; border:3px solid rgba(255,255,255,0.2);
+    border-top-color:#ffd54f; border-radius:50%; animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
   #hud { position:fixed; top:0; left:0; width:100%; display:flex; justify-content:space-between; align-items:flex-start; padding:14px 14px env(safe-area-inset-top,14px); pointer-events:none; z-index:10; }
   .hud-box { background:rgba(12,28,48,0.72); border:1px solid rgba(255,255,255,0.18); border-radius:14px; padding:9px 16px; backdrop-filter:blur(10px); min-width:70px; text-align:center; }
   .hud-label { font-size:10px; text-transform:uppercase; letter-spacing:1.3px; color:#a8c4d8; font-weight:600; }
@@ -141,7 +210,7 @@
   #overlayEnd { position:fixed; inset:0; background:rgba(15,35,60,0.94); display:none; flex-direction:column; justify-content:center; align-items:center; z-index:200; padding:24px; text-align:center; }
   #overlayEnd.visible { display:flex; }
   #overlayEnd h2 { font-size:clamp(36px,10vw,58px); margin-bottom:10px; font-weight:700; }
-  #overlayEnd p { font-size:18px; color:#b0c8d8; margin-bottom:30px; }
+  #overlayEnd p { font-size:18px; color:#b0c8d8; margin-bottom:30px; white-space:pre-line; max-width:420px; }
   .hidden { display:none!important; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -173,9 +242,22 @@
     <div class="hint" id="loginStatus" style="margin-top:8px;"></div>
   </div>
   <div class="menu-btns">
-    <button id="btnStart" type="button">▶  SOLO</button>
+    <button id="btnRanked" type="button">⚔️ RANKED</button>
+    <button id="btnStart" type="button">▶ CASUAL</button>
     <button id="btnHost" type="button">🌐 HOST</button>
     <button id="btnJoin" type="button">🔗 JOIN</button>
+  </div>
+  <div id="rankedPanel">
+    <div class="league-row">
+      <div class="league-badge" id="leagueBadge">🥉</div>
+      <div class="league-info">
+        <div class="league-name" id="leagueName">Bronze I</div>
+        <div class="league-sub" id="leagueSub">1000 MMR · Level 1</div>
+      </div>
+    </div>
+    <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    <div class="league-sub" id="xpLabel">0 / 100 XP</div>
+    <div class="map-hint" id="mapHint">Map: Starter Plains · 20×20</div>
   </div>
   <button id="rankBtn" type="button">🏆 RANKING</button>
   <div id="mpPanel">
@@ -184,9 +266,32 @@
     <button id="btnConfirmJoin" type="button" style="width:100%;margin-top:4px;">Connect</button>
     <div class="mp-status" id="mpStatus"></div>
   </div>
-  <div class="chars-preview">
-    <div class="char-card">🦑</div><div class="char-card">💎</div><div class="char-card">🔮</div>
+  <div id="customPanel">
+    <div class="section-label">Your character</div>
+    <div class="chars-preview" id="charSelect">
+      <div class="char-card selected" data-char="0"><span>🦑</span><span class="char-label">Calamar</span></div>
+      <div class="char-card" data-char="1"><span>💎</span><span class="char-label">Cristal</span></div>
+      <div class="char-card" data-char="2"><span>🔮</span><span class="char-label">Orbe</span></div>
+      <div class="char-card" data-char="3"><span>🗿</span><span class="char-label">Golem</span></div>
+    </div>
+    <div class="section-label">Primary color</div>
+    <div class="color-row" id="colorPrimary"></div>
+    <div class="section-label">Accent color</div>
+    <div class="color-row" id="colorAccent"></div>
+    <div class="section-label">Pickaxe style</div>
+    <div class="pick-row" id="pickSelect">
+      <button type="button" class="pick-btn selected" data-pick="wood">🪵 Wood</button>
+      <button type="button" class="pick-btn" data-pick="steel">⚔️ Steel</button>
+      <button type="button" class="pick-btn" data-pick="crystal">💎 Crystal</button>
+      <button type="button" class="pick-btn" data-pick="gold">✨ Gold</button>
+    </div>
   </div>
+</div>
+<div id="hudLeague">🥉 Bronze</div>
+<div id="matchmakingOverlay">
+  <div class="mm-title">Finding opponent…</div>
+  <div class="mm-sub" id="mmSub">Matching your league</div>
+  <div class="mm-spin"></div>
 </div>
 <div id="hud">
   <div class="hud-box"><div class="hud-label">Time</div><div class="hud-value" id="hudTime">2:00</div></div>
@@ -231,14 +336,149 @@
 </div>
 <script>
 const CFG = {
-  GRID:26, TILE:2.8, PLAYER_SPEED:11, BOT_SPEED:7.2, BOT_COUNT:3, ROUND_TIME:150,
+  GRID:26, TILE:2.8, PLAYER_SPEED:11, BOT_SPEED:7.2, BOT_COUNT:3, ROUND_TIME:120,
   CLAIM_CD:0.25, POWERUP_SPAWN:5.5, POWERUP_DURATION:8, BOMB_FUSE:2.6, BOMB_RADIUS:1,
   WALL_H:1.55, FLAT_H:0.14, JUMP_FORCE:9.5, GRAVITY:22, START_BOMBS:3,
-  COLORS:{ neutral:0x8a8070, player:0xff4d6d, bot:[0x4ade80,0xfbbf24,0xa78bfa],
+  COLORS:{ neutral:0x8a8070, player:0xff4d6d, bot:[0x4ade80,0xfbbf24,0xa78bfa,0x94a3b8],
     powerupSpeed:0x38bdf8, powerupShield:0xa855f7, powerupBomb:0xf87171,
-    sky:0x6EC6FF, grass:0x3d7a3a, grassFar:0x4a8a48 }
+    sky:0x6EC6FF, grass:0x3d7a3a, grassFar:0x4a8a48 },
+  // Ranked runtime flags
+  ranked: false,
+  mapId: 'casual',
+  rockyChance: 0,
+  hazardDamage: 0,
+  islandMode: false
 };
-const WORLD = CFG.GRID * CFG.TILE, WH = WORLD / 2;
+let WORLD = CFG.GRID * CFG.TILE, WH = WORLD / 2;
+
+// ===== RANKED ARENA =====
+const LEAGUES = [
+  { id:'bronze',   name:'Bronze',   emoji:'🥉', min:0,    max:999,  division:3 },
+  { id:'silver',   name:'Silver',   emoji:'🥈', min:1000, max:1199, division:3 },
+  { id:'gold',     name:'Gold',     emoji:'🥇', min:1200, max:1399, division:3 },
+  { id:'platinum', name:'Platinum', emoji:'💎', min:1400, max:1599, division:3 },
+  { id:'diamond',  name:'Diamond',  emoji:'💠', min:1600, max:1799, division:3 },
+  { id:'master',   name:'Master',   emoji:'👑', min:1800, max:9999, division:1 }
+];
+
+const MAP_BY_LEAGUE = {
+  bronze:   { id:'plains',   name:'Starter Plains',  grid:20, bots:2, botSpeed:6.2, round:100, pup:6.5, rocky:0,    hazard:0,    island:false, bombs:3 },
+  silver:   { id:'hills',    name:'Rolling Hills',   grid:24, bots:3, botSpeed:7.0, round:100, pup:5.5, rocky:0.08, hazard:0,    island:false, bombs:3 },
+  gold:     { id:'storm',    name:'Storm Grid',      grid:26, bots:3, botSpeed:7.5, round:90,  pup:4.0, rocky:0.12, hazard:0,    island:false, bombs:4 },
+  platinum: { id:'hazard',   name:'Hazard Zone',     grid:28, bots:3, botSpeed:8.0, round:90,  pup:4.0, rocky:0.15, hazard:8,    island:false, bombs:4 },
+  diamond:  { id:'islands',  name:'Crystal Isles',   grid:30, bots:4, botSpeed:8.2, round:85,  pup:3.5, rocky:0.1,  hazard:10,   island:true,  bombs:5 },
+  master:   { id:'throne',   name:'Throne Arena',    grid:32, bots:4, botSpeed:8.8, round:80,  pup:3.0, rocky:0.18, hazard:12,   island:true,  bombs:5 }
+};
+
+const CASUAL_MAP = { id:'casual', name:'Classic Arena', grid:26, bots:3, botSpeed:7.2, round:120, pup:5.5, rocky:0, hazard:0, island:false, bombs:3 };
+
+const progression = {
+  mmr: 1000,
+  xp: 0,
+  level: 1,
+  wins: 0,
+  losses: 0,
+  rankedPlayed: 0
+};
+
+function loadProgression() {
+  try {
+    const raw = localStorage.getItem('claimio_ranked_v1');
+    if (raw) Object.assign(progression, JSON.parse(raw));
+  } catch (e) {}
+}
+function saveProgression() {
+  try { localStorage.setItem('claimio_ranked_v1', JSON.stringify(progression)); } catch (e) {}
+}
+
+function getLeague(mmr) {
+  let league = LEAGUES[0];
+  for (const L of LEAGUES) {
+    if (mmr >= L.min) league = L;
+  }
+  return league;
+}
+
+function getDivision(mmr, league) {
+  if (league.division <= 1) return '';
+  const span = (league.max - league.min + 1) / league.division;
+  const idx = Math.min(league.division - 1, Math.floor((mmr - league.min) / span));
+  // I = highest within league
+  return ['III', 'II', 'I'][idx] || '';
+}
+
+function getLeagueLabel(mmr) {
+  const L = getLeague(mmr);
+  const div = getDivision(mmr, L);
+  return div ? `${L.name} ${div}` : L.name;
+}
+
+function xpForLevel(lv) {
+  return 80 + (lv - 1) * 25;
+}
+
+function addXP(amount) {
+  progression.xp += amount;
+  let needed = xpForLevel(progression.level);
+  while (progression.xp >= needed) {
+    progression.xp -= needed;
+    progression.level++;
+    needed = xpForLevel(progression.level);
+  }
+}
+
+function applyMapConfig(map) {
+  CFG.GRID = map.grid;
+  CFG.BOT_COUNT = map.bots;
+  CFG.BOT_SPEED = map.botSpeed;
+  CFG.ROUND_TIME = map.round;
+  CFG.POWERUP_SPAWN = map.pup;
+  CFG.START_BOMBS = map.bombs;
+  CFG.rockyChance = map.rocky || 0;
+  CFG.hazardDamage = map.hazard || 0;
+  CFG.islandMode = !!map.island;
+  CFG.mapId = map.id;
+  WORLD = CFG.GRID * CFG.TILE;
+  WH = WORLD / 2;
+}
+
+function updateRankedUI() {
+  const L = getLeague(progression.mmr);
+  const label = getLeagueLabel(progression.mmr);
+  const map = MAP_BY_LEAGUE[L.id] || CASUAL_MAP;
+  const badge = document.getElementById('leagueBadge');
+  const name = document.getElementById('leagueName');
+  const sub = document.getElementById('leagueSub');
+  const fill = document.getElementById('xpFill');
+  const xpLab = document.getElementById('xpLabel');
+  const hint = document.getElementById('mapHint');
+  if (badge) badge.textContent = L.emoji;
+  if (name) name.textContent = label;
+  if (sub) sub.textContent = `${progression.mmr} MMR · Level ${progression.level} · ${progression.wins}W ${progression.losses}L`;
+  const need = xpForLevel(progression.level);
+  if (fill) fill.style.width = Math.min(100, (progression.xp / need) * 100) + '%';
+  if (xpLab) xpLab.textContent = `${progression.xp} / ${need} XP`;
+  if (hint) hint.textContent = `Ranked map: ${map.name} · ${map.grid}×${map.grid}`;
+  const hudL = document.getElementById('hudLeague');
+  if (hudL) hudL.textContent = `${L.emoji} ${label}`;
+}
+
+function recordRankedResult(won, kills, walls) {
+  const before = progression.mmr;
+  const delta = won ? (18 + Math.min(12, kills * 3)) : -(12 + Math.min(8, Math.floor(walls / 5)));
+  progression.mmr = Math.max(0, progression.mmr + delta);
+  progression.rankedPlayed++;
+  if (won) progression.wins++; else progression.losses++;
+  const xpGain = 12 + (won ? 25 : 5) + kills * 5 + Math.floor(walls / 5) * 2;
+  addXP(xpGain);
+  saveProgression();
+  updateRankedUI();
+  return { delta, xpGain, before, after: progression.mmr, won };
+}
+
+// Grid root objects for rebuild
+let gridRoot = null;
+let hazardZones = [];
 const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 if (isTouch) {
   document.body.classList.add('touch-device');
@@ -312,51 +552,144 @@ function updateClouds(dt) {
 const tileGeo = new THREE.BoxGeometry(CFG.TILE*0.92, 1, CFG.TILE*0.92);
 const tiles = [];
 function setTileVisual(t, owner, animate) {
+  if (!t || !t.mesh) return;
   if (owner === null) {
-    const targetY = CFG.FLAT_H/2;
-    t.mesh.material.color.setHex(CFG.COLORS.neutral);
-    t.mesh.material.emissive.setHex(CFG.COLORS.neutral);
-    t.mesh.material.emissiveIntensity = 0.04;
+    const col = t.rocky ? 0x5c5346 : CFG.COLORS.neutral;
+    const targetY = CFG.FLAT_H / 2;
+    t.mesh.material.color.setHex(col);
+    t.mesh.material.emissive.setHex(col);
+    t.mesh.material.emissiveIntensity = t.rocky ? 0.02 : 0.04;
     if (animate) {
-      t.mesh.scale.y = CFG.WALL_H*0.6; t.mesh.position.y = CFG.WALL_H*0.3;
-      setTimeout(()=>{ t.mesh.scale.y=CFG.FLAT_H; t.mesh.position.y=targetY; }, 90);
-    } else { t.mesh.scale.y=CFG.FLAT_H; t.mesh.position.y=targetY; }
+      t.mesh.scale.y = CFG.WALL_H * 0.6; t.mesh.position.y = CFG.WALL_H * 0.3;
+      setTimeout(() => { t.mesh.scale.y = CFG.FLAT_H; t.mesh.position.y = targetY; }, 90);
+    } else { t.mesh.scale.y = CFG.FLAT_H; t.mesh.position.y = targetY; }
   } else {
-    const color = owner==='player' ? CFG.COLORS.player
-      : (owner==='rival' ? 0x38bdf8
-      : CFG.COLORS.bot[parseInt(String(owner).replace('bot',''))||0]);
+    const color = owner === 'player' ? CFG.COLORS.player
+      : (owner === 'rival' ? 0x38bdf8
+      : CFG.COLORS.bot[parseInt(String(owner).replace('bot', '')) || 0]);
     t.mesh.material.color.setHex(color); t.mesh.material.emissive.setHex(color);
     t.mesh.material.emissiveIntensity = 0.4;
     if (animate) {
-      t.mesh.scale.y=CFG.FLAT_H; t.mesh.position.y=CFG.FLAT_H/2;
-      setTimeout(()=>{ t.mesh.scale.y=CFG.WALL_H; t.mesh.position.y=CFG.WALL_H/2; }, 40);
-    } else { t.mesh.scale.y=CFG.WALL_H; t.mesh.position.y=CFG.WALL_H/2; }
+      t.mesh.scale.y = CFG.FLAT_H; t.mesh.position.y = CFG.FLAT_H / 2;
+      setTimeout(() => { t.mesh.scale.y = CFG.WALL_H; t.mesh.position.y = CFG.WALL_H / 2; }, 40);
+    } else { t.mesh.scale.y = CFG.WALL_H; t.mesh.position.y = CFG.WALL_H / 2; }
   }
 }
-  function createGrid() {
-  const base = new THREE.Mesh(new THREE.PlaneGeometry(WORLD+40, WORLD+40), new THREE.MeshLambertMaterial({ color: CFG.COLORS.grass }));
-  base.rotation.x = -Math.PI/2; base.position.y = -0.02; base.receiveShadow = true; scene.add(base);
-  const far = new THREE.Mesh(new THREE.RingGeometry(WH+10, 200, 64), new THREE.MeshLambertMaterial({ color: CFG.COLORS.grassFar }));
-  far.rotation.x = -Math.PI/2; far.position.y = -0.05; scene.add(far);
+function clearGrid() {
+  if (gridRoot) {
+    scene.remove(gridRoot);
+    gridRoot.traverse(c => {
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) {
+        if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
+        else c.material.dispose();
+      }
+    });
+    gridRoot = null;
+  }
+  tiles.length = 0;
+  hazardZones = [];
+}
+
+function createGrid() {
+  clearGrid();
+  gridRoot = new THREE.Group();
+  scene.add(gridRoot);
+
+  const base = new THREE.Mesh(new THREE.PlaneGeometry(WORLD + 40, WORLD + 40), new THREE.MeshLambertMaterial({ color: CFG.COLORS.grass }));
+  base.rotation.x = -Math.PI / 2; base.position.y = -0.02; base.receiveShadow = true;
+  gridRoot.add(base);
+
+  const far = new THREE.Mesh(new THREE.RingGeometry(WH + 10, 200, 64), new THREE.MeshLambertMaterial({ color: CFG.COLORS.grassFar }));
+  far.rotation.x = -Math.PI / 2; far.position.y = -0.05;
+  gridRoot.add(far);
+
+  const cx = (CFG.GRID - 1) / 2;
+  const cy = (CFG.GRID - 1) / 2;
+  const islandR = CFG.GRID * 0.28;
+  const holeR = CFG.GRID * 0.12;
+
   for (let z = 0; z < CFG.GRID; z++) {
     const row = [];
     for (let x = 0; x < CFG.GRID; x++) {
-      const mat = new THREE.MeshLambertMaterial({ color: CFG.COLORS.neutral, emissive: CFG.COLORS.neutral, emissiveIntensity: 0.04 });
+      let blocked = false;
+      if (CFG.islandMode) {
+        const dx = x - cx, dz = z - cy;
+        const d = Math.sqrt(dx * dx + dz * dz);
+        // Ring island: outer void + small center void
+        if (d > islandR || d < holeR) blocked = true;
+      }
+      if (blocked) {
+        row.push({ mesh: null, owner: null, blocked: true, rocky: false });
+        continue;
+      }
+      const rocky = CFG.rockyChance > 0 && Math.random() < CFG.rockyChance;
+      const col = rocky ? 0x5c5346 : CFG.COLORS.neutral;
+      const mat = new THREE.MeshLambertMaterial({ color: col, emissive: col, emissiveIntensity: rocky ? 0.02 : 0.04 });
       const mesh = new THREE.Mesh(tileGeo, mat);
-      mesh.position.set(x*CFG.TILE+CFG.TILE/2-WH, CFG.FLAT_H/2, z*CFG.TILE+CFG.TILE/2-WH);
+      mesh.position.set(x * CFG.TILE + CFG.TILE / 2 - WH, CFG.FLAT_H / 2, z * CFG.TILE + CFG.TILE / 2 - WH);
       mesh.scale.y = CFG.FLAT_H; mesh.receiveShadow = true; mesh.castShadow = true;
-      scene.add(mesh); row.push({ mesh, owner: null });
+      gridRoot.add(mesh);
+      row.push({ mesh, owner: null, blocked: false, rocky, hits: rocky ? 2 : 1 });
     }
     tiles.push(row);
   }
+
   const wallMat = new THREE.MeshLambertMaterial({ color: 0x6b5a3e });
-  [[0,1],[1,0],[0,-1],[-1,0]].forEach(([dx,dz]) => {
-    const w = new THREE.Mesh(new THREE.BoxGeometry(WORLD+1.2, 1.2, 0.5), wallMat);
-    w.position.set(dx*(WH+0.5), 0.5, dz*(WH+0.5));
-    if (dx === 0) w.rotation.y = Math.PI/2;
-    w.castShadow = true; scene.add(w);
+  [[0, 1], [1, 0], [0, -1], [-1, 0]].forEach(([dx, dz]) => {
+    const w = new THREE.Mesh(new THREE.BoxGeometry(WORLD + 1.2, 1.2, 0.5), wallMat);
+    w.position.set(dx * (WH + 0.5), 0.5, dz * (WH + 0.5));
+    if (dx === 0) w.rotation.y = Math.PI / 2;
+    w.castShadow = true;
+    gridRoot.add(w);
   });
+
+  // Hazard zones (corners) for high leagues
+  if (CFG.hazardDamage > 0) {
+    const hMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.22 });
+    const spots = [
+      [2, 2], [CFG.GRID - 3, 2], [2, CFG.GRID - 3], [CFG.GRID - 3, CFG.GRID - 3]
+    ];
+    spots.forEach(([hx, hz]) => {
+      if (hx < 0 || hz < 0 || hx >= CFG.GRID || hz >= CFG.GRID) return;
+      if (tiles[hz] && tiles[hz][hx] && tiles[hz][hx].blocked) return;
+      const m = new THREE.Mesh(new THREE.CircleGeometry(CFG.TILE * 1.4, 16), hMat);
+      m.rotation.x = -Math.PI / 2;
+      m.position.set(hx * CFG.TILE + CFG.TILE / 2 - WH, 0.05, hz * CFG.TILE + CFG.TILE / 2 - WH);
+      gridRoot.add(m);
+      hazardZones.push({ x: hx, z: hz, radius: 1.5 });
+    });
+  }
+
+  // Ensure center is walkable for spawn
+  const mid = Math.floor(CFG.GRID / 2);
+  if (tiles[mid] && tiles[mid][mid] && tiles[mid][mid].blocked) {
+    // carve a small spawn pad
+    for (let dz = -1; dz <= 1; dz++)
+      for (let dx = -1; dx <= 1; dx++) {
+        const x = mid + dx, z = mid + dz;
+        if (x < 0 || z < 0 || x >= CFG.GRID || z >= CFG.GRID) continue;
+        if (!tiles[z][x].blocked) continue;
+        const mat = new THREE.MeshLambertMaterial({ color: CFG.COLORS.neutral, emissive: CFG.COLORS.neutral, emissiveIntensity: 0.04 });
+        const mesh = new THREE.Mesh(tileGeo, mat);
+        mesh.position.set(x * CFG.TILE + CFG.TILE / 2 - WH, CFG.FLAT_H / 2, z * CFG.TILE + CFG.TILE / 2 - WH);
+        mesh.scale.y = CFG.FLAT_H; mesh.receiveShadow = true; mesh.castShadow = true;
+        gridRoot.add(mesh);
+        tiles[z][x] = { mesh, owner: null, blocked: false, rocky: false, hits: 1 };
+      }
+  }
+
   createClouds();
+}
+
+function rebuildGridForMap(map) {
+  applyMapConfig(map);
+  // Remove clouds
+  while (clouds.length) {
+    const c = clouds.pop();
+    scene.remove(c);
+  }
+  createGrid();
 }
 
 function getTileIdx(px, pz) {
@@ -437,7 +770,19 @@ function isAdjacentTo(x, z, owner) {
 
 function claimTile(x, z, owner, force = false) {
   if (x < 0 || x >= CFG.GRID || z < 0 || z >= CFG.GRID) return false;
+  if (!tiles[z] || !tiles[z][x]) return false;
   const t = tiles[z][x];
+  if (t.blocked || !t.mesh) return false;
+
+  // Rocky tiles need extra hit first (soft mine)
+  if (t.rocky && t.owner === null && !force) {
+    t.hits = (t.hits || 2) - 1;
+    if (t.hits > 0) {
+      t.mesh.material.emissiveIntensity = 0.25;
+      return false;
+    }
+    t.rocky = false;
+  }
 
   if (t.owner === owner) {
     if (owner === 'player') game.playerScore = Math.max(0, game.playerScore - 1);
@@ -540,7 +885,7 @@ function updateAuthUI() {
   if (btnLogout) btnLogout.classList.toggle('hidden', !isAuthenticated());
   if (panel && isAuthenticated()) panel.classList.remove('visible');
   // Lock play buttons until logged in
-  ['btnStart', 'btnHost', 'btnJoin'].forEach(id => {
+  ['btnStart', 'btnHost', 'btnJoin', 'btnRanked'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.disabled = !isAuthenticated();
@@ -721,7 +1066,7 @@ function respawnBot(bot) {
   bot.shield = Math.max(bot.shield, 1.2); bot.claimCd = 0.5;
 }
 
-const BOT_NAMES = ['Calamar', 'Cristal', 'Orbe'];
+const BOT_NAMES = CHAR_NAMES;
 
 function crushOccupants(tileX, tileZ, raisedBy) {
   if (raisedBy !== 'player') {
@@ -749,67 +1094,255 @@ function crushOccupants(tileX, tileZ, raisedBy) {
   }
 }
 
-function createCalamar(colorHex) {
+const CHAR_NAMES = ['Calamar', 'Cristal', 'Orbe', 'Golem'];
+const CHAR_EMOJIS = ['🦑', '💎', '🔮', '🗿'];
+const PRIMARY_COLORS = [0xff4d6d, 0x4ade80, 0x38bdf8, 0xfbbf24, 0xa78bfa, 0xf97316, 0xec4899, 0x14b8a6];
+const ACCENT_COLORS = [0xffffff, 0xffd54f, 0x111118, 0x38bdf8, 0xff6b8a, 0xa3e635];
+
+function createCalamar(colorHex, accentHex) {
   const group = new THREE.Group();
-  const bodyMat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.28 });
-  const darkMat = new THREE.MeshLambertMaterial({ color: 0x111118 });
-  const mantle = new THREE.Mesh(new THREE.ConeGeometry(0.72, 1.45, 6), bodyMat);
-  mantle.position.y = 1.15; mantle.rotation.x = Math.PI; group.add(mantle);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.58, 8, 6), bodyMat);
-  head.position.y = 1.9; group.add(head);
-  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.15, 6, 4), darkMat);
-  eyeL.position.set(-0.24, 2.0, 0.42);
-  const eyeR = eyeL.clone(); eyeR.position.x = 0.24; group.add(eyeL, eyeR);
-  for (let i = 0; i < 6; i++) {
-    const ang = (i / 6) * Math.PI * 2;
-    const tent = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.04, 1.15, 4), bodyMat);
-    tent.position.set(Math.cos(ang)*0.38, 0.35, Math.sin(ang)*0.38);
-    tent.rotation.x = Math.PI*0.15*Math.sin(ang*2); tent.rotation.z = Math.cos(ang)*0.3;
+  const bodyMat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.3 });
+  const accentMat = new THREE.MeshLambertMaterial({ color: accentHex || 0x111118, emissive: accentHex || 0x111118, emissiveIntensity: 0.15 });
+  const darkMat = new THREE.MeshLambertMaterial({ color: 0x0a0a10 });
+  // Mantle
+  const mantle = new THREE.Mesh(new THREE.ConeGeometry(0.78, 1.5, 7), bodyMat);
+  mantle.position.y = 1.2; mantle.rotation.x = Math.PI; group.add(mantle);
+  // Head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.62, 10, 8), bodyMat);
+  head.position.y = 1.95; group.add(head);
+  // Fin / crown
+  const fin = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.55, 5), accentMat);
+  fin.position.y = 2.55; group.add(fin);
+  // Eyes with glow pupils
+  [[-0.26, 2.05, 0.45], [0.26, 2.05, 0.45]].forEach(([x, y, z]) => {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.16, 6, 5), darkMat);
+    eye.position.set(x, y, z); group.add(eye);
+    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.07, 5, 4), new THREE.MeshBasicMaterial({ color: accentHex || 0xffd54f }));
+    pupil.position.set(x, y, z + 0.12); group.add(pupil);
+  });
+  // Tentacles with suckers
+  for (let i = 0; i < 8; i++) {
+    const ang = (i / 8) * Math.PI * 2;
+    const tent = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.035, 1.25, 5), bodyMat);
+    tent.position.set(Math.cos(ang) * 0.4, 0.4, Math.sin(ang) * 0.4);
+    tent.rotation.x = 0.25 * Math.sin(ang * 2);
+    tent.rotation.z = Math.cos(ang) * 0.35;
+    tent.userData = { isTent: true, baseAng: ang, phase: i * 0.7 };
     group.add(tent);
   }
+  group.userData.charType = 0;
   group.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
   return group;
 }
-function createCristal(colorHex) {
+
+function createCristal(colorHex, accentHex) {
   const group = new THREE.Group();
-  const mat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.42, transparent: true, opacity: 0.9 });
-  const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.9, 0), mat);
-  crystal.position.y = 1.25; crystal.scale.set(0.72, 1.45, 0.72); group.add(crystal);
-  const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.38, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-  core.position.y = 1.25; group.add(core);
-  for (let i = 0; i < 4; i++) {
-    const shard = new THREE.Mesh(new THREE.TetrahedronGeometry(0.22, 0), mat);
-    shard.userData = { angle: (i/4)*Math.PI*2, radius: 1.2 }; group.add(shard);
+  const mat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.45, transparent: true, opacity: 0.88 });
+  const accentMat = new THREE.MeshLambertMaterial({ color: accentHex || 0xffffff, emissive: accentHex || 0xffffff, emissiveIntensity: 0.5 });
+  const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.95, 0), mat);
+  crystal.position.y = 1.3; crystal.scale.set(0.7, 1.5, 0.7); group.add(crystal);
+  // Side crystals
+  for (let i = 0; i < 3; i++) {
+    const side = new THREE.Mesh(new THREE.OctahedronGeometry(0.35, 0), mat);
+    const a = (i / 3) * Math.PI * 2;
+    side.position.set(Math.cos(a) * 0.55, 1.1, Math.sin(a) * 0.55);
+    side.scale.set(0.5, 1.1, 0.5);
+    group.add(side);
   }
-  group.traverse(c => { if (c.isMesh) c.castShadow = true; });
-  return group;
-}
-function createOrbe(colorHex) {
-  const group = new THREE.Group();
-  const mat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.38 });
-  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.72, 1), mat);
-  core.position.y = 1.15; group.add(core);
-  const ringGeo = new THREE.TorusGeometry(1.05, 0.07, 6, 18);
-  const ring1 = new THREE.Mesh(ringGeo, mat); ring1.position.y = 1.15; ring1.rotation.x = Math.PI/2.4; group.add(ring1);
-  const ring2 = new THREE.Mesh(ringGeo, mat); ring2.position.y = 1.15; ring2.rotation.x = Math.PI/1.55; ring2.rotation.y = Math.PI/3; group.add(ring2);
+  const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.32, 0), accentMat);
+  core.position.y = 1.3; group.add(core);
   for (let i = 0; i < 5; i++) {
-    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.11, 4, 4), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    dot.userData = { angle: (i/5)*Math.PI*2, radius: 1.4 }; group.add(dot);
+    const shard = new THREE.Mesh(new THREE.TetrahedronGeometry(0.2, 0), mat);
+    shard.userData = { angle: (i / 5) * Math.PI * 2, radius: 1.25 };
+    group.add(shard);
   }
+  group.userData.charType = 1;
   group.traverse(c => { if (c.isMesh) c.castShadow = true; });
   return group;
 }
-const CHAR_BUILDERS = [createCalamar, createCristal, createOrbe];
+
+function createOrbe(colorHex, accentHex) {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.4 });
+  const accentMat = new THREE.MeshBasicMaterial({ color: accentHex || 0xffffff });
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.75, 1), mat);
+  core.position.y = 1.2; group.add(core);
+  // Inner glow sphere
+  const inner = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 8), accentMat);
+  inner.position.y = 1.2; group.add(inner);
+  const ringGeo = new THREE.TorusGeometry(1.1, 0.06, 6, 20);
+  for (let i = 0; i < 3; i++) {
+    const ring = new THREE.Mesh(ringGeo, mat);
+    ring.position.y = 1.2;
+    ring.rotation.x = Math.PI / 2.2 + i * 0.5;
+    ring.rotation.y = i * 0.9;
+    ring.userData = { isRing: true, speed: 0.6 + i * 0.3 };
+    group.add(ring);
+  }
+  for (let i = 0; i < 6; i++) {
+    const dot = new THREE.Mesh(new THREE.SphereGeometry(0.1, 5, 4), accentMat);
+    dot.userData = { angle: (i / 6) * Math.PI * 2, radius: 1.45 };
+    group.add(dot);
+  }
+  group.userData.charType = 2;
+  group.traverse(c => { if (c.isMesh) c.castShadow = true; });
+  return group;
+}
+
+function createGolem(colorHex, accentHex) {
+  const group = new THREE.Group();
+  const bodyMat = new THREE.MeshLambertMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.22 });
+  const accentMat = new THREE.MeshLambertMaterial({ color: accentHex || 0xffd54f, emissive: accentHex || 0xffd54f, emissiveIntensity: 0.35 });
+  // Body blocks
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.0, 0.7), bodyMat);
+  torso.position.y = 1.15; group.add(torso);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.65, 0.65), bodyMat);
+  head.position.y = 1.95; group.add(head);
+  // Glowing eyes
+  [[-0.18, 2.0, 0.35], [0.18, 2.0, 0.35]].forEach(([x, y, z]) => {
+    const eye = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.1, 0.08), accentMat);
+    eye.position.set(x, y, z); group.add(eye);
+  });
+  // Arms
+  [[-0.75, 1.15], [0.75, 1.15]].forEach(([x, y]) => {
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.9, 0.35), bodyMat);
+    arm.position.set(x, y, 0); group.add(arm);
+  });
+  // Legs
+  [[-0.3, 0.4], [0.3, 0.4]].forEach(([x, y]) => {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.75, 0.4), bodyMat);
+    leg.position.set(x, y, 0); group.add(leg);
+  });
+  // Chest gem
+  const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), accentMat);
+  gem.position.set(0, 1.25, 0.38); group.add(gem);
+  group.userData.charType = 3;
+  group.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+  return group;
+}
+
+const CHAR_BUILDERS = [createCalamar, createCristal, createOrbe, createGolem];
+
+// ===== PLAYER CUSTOMIZATION =====
+const playerCustom = {
+  charType: 0,
+  primary: 0xff4d6d,
+  accent: 0xffd54f,
+  pickaxe: 'wood'
+};
+
+function loadCustom() {
+  try {
+    const raw = localStorage.getItem('claimio_custom_v1');
+    if (raw) Object.assign(playerCustom, JSON.parse(raw));
+  } catch (e) {}
+}
+function saveCustom() {
+  try { localStorage.setItem('claimio_custom_v1', JSON.stringify(playerCustom)); } catch (e) {}
+}
+
+function rebuildPickaxe() {
+  while (pickaxe.children.length) pickaxe.remove(pickaxe.children[0]);
+  const styles = {
+    wood: { handle: 0x6b4423, head: 0x8a8a8a, emissive: 0x222222 },
+    steel: { handle: 0x4a5568, head: 0xc0c8d0, emissive: 0x334455 },
+    crystal: { handle: 0x7c3aed, head: 0xa78bfa, emissive: 0x6d28d9 },
+    gold: { handle: 0xb45309, head: 0xfbbf24, emissive: 0xd97706 }
+  };
+  const s = styles[playerCustom.pickaxe] || styles.wood;
+  const hMat = new THREE.MeshLambertMaterial({ color: s.handle });
+  const headMat = new THREE.MeshLambertMaterial({ color: s.head, emissive: s.emissive, emissiveIntensity: 0.25 });
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.4, 6), hMat);
+  handle.rotation.z = Math.PI / 2; handle.position.set(0.28, -0.2, -0.55); pickaxe.add(handle);
+  const pHead = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.3, 0.42), headMat);
+  pHead.position.set(0.75, -0.2, -0.55); pickaxe.add(pHead);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.3, 5), headMat);
+  tip.rotation.z = -Math.PI / 2; tip.position.set(0.95, -0.2, -0.55); pickaxe.add(tip);
+  // Accent band on handle
+  const band = new THREE.Mesh(
+    new THREE.TorusGeometry(0.09, 0.025, 6, 12),
+    new THREE.MeshLambertMaterial({ color: playerCustom.accent, emissive: playerCustom.accent, emissiveIntensity: 0.4 })
+  );
+  band.rotation.y = Math.PI / 2; band.position.set(0.45, -0.2, -0.55); pickaxe.add(band);
+}
+
+function applyPlayerCustom() {
+  if (playerLight) {
+    playerLight.color.setHex(playerCustom.primary);
+  }
+  if (CFG && CFG.COLORS) CFG.COLORS.player = playerCustom.primary;
+  rebuildPickaxe();
+  saveCustom();
+}
+
+function initCustomUI() {
+  loadCustom();
+  // Char cards
+  document.querySelectorAll('#charSelect .char-card').forEach(card => {
+    const t = parseInt(card.dataset.char, 10);
+    card.classList.toggle('selected', t === playerCustom.charType);
+    card.addEventListener('click', () => {
+      playerCustom.charType = t;
+      document.querySelectorAll('#charSelect .char-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      applyPlayerCustom();
+    });
+  });
+  // Color swatches
+  function fillColors(containerId, list, key) {
+    const row = document.getElementById(containerId);
+    if (!row) return;
+    row.innerHTML = '';
+    list.forEach(hex => {
+      const sw = document.createElement('div');
+      sw.className = 'color-swatch' + (playerCustom[key] === hex ? ' selected' : '');
+      sw.style.background = '#' + hex.toString(16).padStart(6, '0');
+      sw.addEventListener('click', () => {
+        playerCustom[key] = hex;
+        row.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+        sw.classList.add('selected');
+        applyPlayerCustom();
+      });
+      row.appendChild(sw);
+    });
+  }
+  fillColors('colorPrimary', PRIMARY_COLORS, 'primary');
+  fillColors('colorAccent', ACCENT_COLORS, 'accent');
+  // Pickaxe
+  document.querySelectorAll('#pickSelect .pick-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.dataset.pick === playerCustom.pickaxe);
+    btn.addEventListener('click', () => {
+      playerCustom.pickaxe = btn.dataset.pick;
+      document.querySelectorAll('#pickSelect .pick-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      applyPlayerCustom();
+    });
+  });
+  applyPlayerCustom();
+}
 
 class Bot {
-  constructor(id, colorHex, typeIdx) {
+  constructor(id, colorHex, typeIdx, accentHex) {
     this.id = id; this.score = 0; this.shield = 0; this.speed = CFG.BOT_SPEED;
-    this.claimCd = 0; this.bombs = 0; this.typeIdx = typeIdx;
-    this.mesh = CHAR_BUILDERS[typeIdx](colorHex); this.mesh.scale.setScalar(0.75);
-    let sx, sz;
-    do { sx = Math.floor(Math.random()*CFG.GRID); sz = Math.floor(Math.random()*CFG.GRID); }
-    while (Math.abs(sx-CFG.GRID/2) < 6 && Math.abs(sz-CFG.GRID/2) < 6);
-    this.mesh.position.set(sx*CFG.TILE+CFG.TILE/2-WH, 0, sz*CFG.TILE+CFG.TILE/2-WH);
+    this.claimCd = 0; this.bombs = 0; this.typeIdx = typeIdx % CHAR_BUILDERS.length;
+    this.mesh = CHAR_BUILDERS[this.typeIdx](colorHex, accentHex || 0xffffff);
+    this.mesh.scale.setScalar(0.75);
+    let sx, sz, tries = 0;
+    do {
+      sx = Math.floor(Math.random() * CFG.GRID);
+      sz = Math.floor(Math.random() * CFG.GRID);
+      tries++;
+    } while (
+      tries < 80 && (
+        (Math.abs(sx - CFG.GRID / 2) < 5 && Math.abs(sz - CFG.GRID / 2) < 5) ||
+        !tiles[sz] || !tiles[sz][sx] || tiles[sz][sx].blocked || !tiles[sz][sx].mesh
+      )
+    );
+    if (!tiles[sz] || !tiles[sz][sx] || tiles[sz][sx].blocked) {
+      sx = Math.floor(CFG.GRID / 2) + 3;
+      sz = Math.floor(CFG.GRID / 2) + 3;
+    }
+    this.mesh.position.set(sx * CFG.TILE + CFG.TILE / 2 - WH, 0, sz * CFG.TILE + CFG.TILE / 2 - WH);
     scene.add(this.mesh);
     this.light = new THREE.PointLight(colorHex, 0.95, 15); scene.add(this.light);
     this.tx = sx; this.tz = sz; this.targetX = sx; this.targetZ = sz;
@@ -820,27 +1353,41 @@ class Bot {
     this.claimCd -= dt; this.shield = Math.max(0, this.shield - dt);
     this.thinkT -= dt; this.bobPhase += dt * 2.3;
     this.mesh.position.y = Math.sin(this.bobPhase) * 0.14;
-    if (this.typeIdx === 1) {
+    if (this.typeIdx === 0) {
+      // Calamar tentacle wave
+      this.mesh.rotation.y += dt * 1.4;
+      this.mesh.children.forEach(c => {
+        if (c.userData.isTent) {
+          c.rotation.x = 0.2 * Math.sin(this.bobPhase + c.userData.phase);
+          c.rotation.z = Math.cos(c.userData.baseAng) * 0.3 + 0.1 * Math.sin(this.bobPhase * 1.5 + c.userData.phase);
+        }
+      });
+    } else if (this.typeIdx === 1) {
       this.mesh.rotation.y += dt * 1.3;
       this.mesh.children.forEach(c => {
         if (c.userData.angle !== undefined) {
           c.userData.angle += dt * 2.6;
           c.position.x = Math.cos(c.userData.angle) * c.userData.radius;
           c.position.z = Math.sin(c.userData.angle) * c.userData.radius;
-          c.position.y = 1.25 + Math.sin(c.userData.angle * 2) * 0.22;
+          c.position.y = 1.3 + Math.sin(c.userData.angle * 2) * 0.22;
         }
       });
     } else if (this.typeIdx === 2) {
       this.mesh.rotation.y += dt * 0.9;
       this.mesh.children.forEach(c => {
+        if (c.userData.isRing) c.rotation.z += dt * c.userData.speed;
         if (c.userData.angle !== undefined) {
           c.userData.angle += dt * 3.2;
           c.position.x = Math.cos(c.userData.angle) * c.userData.radius;
           c.position.z = Math.sin(c.userData.angle) * c.userData.radius;
-          c.position.y = 1.15 + Math.sin(c.userData.angle) * 0.28;
+          c.position.y = 1.2 + Math.sin(c.userData.angle) * 0.28;
         }
       });
-    } else this.mesh.rotation.y += dt * 1.6;
+    } else {
+      // Golem: slight sway
+      this.mesh.rotation.y += dt * 0.8;
+      this.mesh.rotation.z = Math.sin(this.bobPhase) * 0.04;
+    }
 
     if (this.thinkT <= 0) {
       this.thinkT = 0.3 + Math.random() * 0.75;
@@ -848,7 +1395,7 @@ class Bot {
       for (let dz = -5; dz <= 5; dz++)
         for (let dx = -5; dx <= 5; dx++) {
           const nx = this.tx+dx, nz = this.tz+dz;
-          if (nx >= 0 && nx < CFG.GRID && nz >= 0 && nz < CFG.GRID && tiles[nz][nx].owner !== this.id) {
+          if (nx >= 0 && nx < CFG.GRID && nz >= 0 && nz < CFG.GRID && tiles[nz] && tiles[nz][nx] && !tiles[nz][nx].blocked && tiles[nz][nx].mesh && tiles[nz][nx].owner !== this.id) {
             let weight = tiles[nz][nx].owner === 'player' ? 5.5 : (tiles[nz][nx].owner === null ? 2.4 : 1.5);
             weight *= (6.2 - (Math.abs(dx)+Math.abs(dz)) * 0.32);
             candidates.push({ x: nx, z: nz, w: weight });
@@ -1087,7 +1634,8 @@ function bindTap(el, fn) {
   el.addEventListener('touchend', run, { passive: false });
 }
 
-bindTap(btnStart, startGame);
+bindTap(btnStart, startCasualMatch);
+bindTap(document.getElementById('btnRanked'), startRankedMatch);
 bindTap(btnRestart, () => {
   document.getElementById('namePrompt')?.classList.remove('visible');
   game.restart();
@@ -1130,6 +1678,9 @@ if (otpInput) {
 }
 
 initAuth();
+initCustomUI();
+loadProgression();
+updateRankedUI();
 
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement === renderer.domElement) {
@@ -1261,14 +1812,29 @@ function mpStatus(msg) {
   if (el) el.textContent = msg;
 }
 
-function ensureRemoteMesh() {
-  if (mp.remoteMesh) return;
-  mp.remoteMesh = createCalamar(0x38bdf8);
+function ensureRemoteMesh(charType, primary, accent) {
+  const t = (charType != null ? charType : 0) % CHAR_BUILDERS.length;
+  const col = primary || 0x38bdf8;
+  const acc = accent || 0xffffff;
+  if (mp.remoteMesh) {
+    // Rebuild if type changed
+    if (mp.remoteCharType !== t || mp.remotePrimary !== col) {
+      scene.remove(mp.remoteMesh);
+      mp.remoteMesh = null;
+    } else return;
+  }
+  mp.remoteCharType = t;
+  mp.remotePrimary = col;
+  mp.remoteMesh = CHAR_BUILDERS[t](col, acc);
   mp.remoteMesh.scale.setScalar(0.75);
   mp.remoteMesh.position.set(8, 0, 8);
   scene.add(mp.remoteMesh);
-  mp.remoteLight = new THREE.PointLight(0x38bdf8, 0.9, 14);
-  scene.add(mp.remoteLight);
+  if (!mp.remoteLight) {
+    mp.remoteLight = new THREE.PointLight(col, 0.9, 14);
+    scene.add(mp.remoteLight);
+  } else {
+    mp.remoteLight.color.setHex(col);
+  }
 }
 
 function removeRemoteMesh() {
@@ -1285,11 +1851,13 @@ function mpSend(data) {
 function mpOnData(data) {
   if (!data || !data.t) return;
   if (data.t === 'pos') {
-    ensureRemoteMesh();
-    mp.remoteMesh.position.x = data.x;
-    mp.remoteMesh.position.z = data.z;
-    mp.remoteMesh.position.y = Math.sin(performance.now() * 0.004) * 0.12;
-    mp.remoteMesh.rotation.y = data.ry || 0;
+    ensureRemoteMesh(data.charType, data.primary, data.accent);
+    if (mp.remoteMesh) {
+      mp.remoteMesh.position.x = data.x;
+      mp.remoteMesh.position.z = data.z;
+      mp.remoteMesh.position.y = Math.sin(performance.now() * 0.004) * 0.12;
+      mp.remoteMesh.rotation.y = data.ry || 0;
+    }
     if (mp.remoteLight) mp.remoteLight.position.set(data.x, 1.2, data.z);
     if (data.name) mp.remoteName = data.name;
   } else if (data.t === 'claim') {
@@ -1505,10 +2073,13 @@ const game = {
     }
     this.bots = [];
     while (powerups.length) removePowerup(0);
-    for (let z = 0; z < CFG.GRID; z++)
-      for (let x = 0; x < CFG.GRID; x++) {
-        tiles[z][x].owner = null;
-        setTileVisual(tiles[z][x], null, false);
+    for (let z = 0; z < tiles.length; z++)
+      for (let x = 0; x < (tiles[z] || []).length; x++) {
+        const t = tiles[z][x];
+        if (!t || t.blocked || !t.mesh) continue;
+        t.owner = null;
+        if (t.rocky) t.hits = 2;
+        setTileVisual(t, null, false);
       }
     camera.position.set(0, 1.75, 0);
     camera.rotation.set(0, 0, 0);
@@ -1520,6 +2091,7 @@ const game = {
     this.points = 0;
     this.playerSpeedBoost = this.playerShield = 0;
     this.playerBombs = CFG.START_BOMBS;
+    this.hazardTick = 0;
     const feed = document.getElementById('killFeed');
     if (feed) feed.innerHTML = '';
     while (traps.length) {
@@ -1532,9 +2104,10 @@ const game = {
     this.timeLeft = CFG.ROUND_TIME;
     this.pupTimer = 3;
     mp.remoteScore = 0;
-    if (mp.mode === 'solo') {
+    if (mp.mode === 'solo' || CFG.ranked) {
       for (let i = 0; i < CFG.BOT_COUNT; i++) {
-        this.bots.push(new Bot('bot' + i, CFG.COLORS.bot[i], i));
+        const accents = [0xffffff, 0xffd54f, 0x38bdf8, 0xf97316];
+        this.bots.push(new Bot('bot' + i, CFG.COLORS.bot[i % CFG.COLORS.bot.length], i % CHAR_BUILDERS.length, accents[i % accents.length]));
       }
     }
     const pc = getTileIdx(0, 0);
@@ -1544,12 +2117,17 @@ const game = {
   startPlaying() {
     this.state = 'playing';
     document.getElementById('overlayEnd').classList.remove('visible');
+    const hudL = document.getElementById('hudLeague');
+    if (hudL) hudL.style.display = CFG.ranked ? 'block' : 'none';
     this.updateHUD();
   },
 
   restart() {
+    CFG.ranked = false;
+    rebuildGridForMap(CASUAL_MAP);
     this.resetWorld();
     document.getElementById('overlayEnd').classList.remove('visible');
+    document.getElementById('hudLeague').style.display = 'none';
     this.state = 'menu';
   },
 
@@ -1617,8 +2195,40 @@ const game = {
     }
 
     const feet = getTileIdx(camera.position.x, camera.position.z);
-    if (feet && tiles[feet.z][feet.x].owner) {
+    if (feet && tiles[feet.z] && tiles[feet.z][feet.x] && tiles[feet.z][feet.x].owner) {
       ejectFromTile(feet.x, feet.z, camera.position, 'player');
+    }
+
+    // Hazard zones (high leagues)
+    if (CFG.hazardDamage > 0 && hazardZones.length && this.playerShield <= 0) {
+      this.hazardTick = (this.hazardTick || 0) + dt;
+      if (this.hazardTick >= 1.2) {
+        this.hazardTick = 0;
+        const pi = getTileIdx(camera.position.x, camera.position.z);
+        if (pi) {
+          for (const h of hazardZones) {
+            if (Math.abs(pi.x - h.x) <= 1 && Math.abs(pi.z - h.z) <= 1) {
+              // Soft punish: lose one wall if any, else flash toast
+              if (this.playerScore > 0) {
+                // find a player wall and clear it
+                outer: for (let z = 0; z < CFG.GRID; z++)
+                  for (let x = 0; x < CFG.GRID; x++) {
+                    if (tiles[z][x] && tiles[z][x].owner === 'player') {
+                      tiles[z][x].owner = null;
+                      setTileVisual(tiles[z][x], null, true);
+                      this.playerScore = Math.max(0, this.playerScore - 1);
+                      break outer;
+                    }
+                  }
+                showKillToast('⚠ Hazard zone! −1 wall');
+              } else {
+                showKillToast('⚠ Hazard zone!');
+              }
+              break;
+            }
+          }
+        }
+      }
     }
 
     for (const b of this.bots) b.update(dt);
@@ -1627,7 +2237,13 @@ const game = {
       mp.syncAcc = (mp.syncAcc || 0) + dt;
       if (mp.syncAcc > 0.08) {
         mp.syncAcc = 0;
-        mpSend({ t: 'pos', x: camera.position.x, z: camera.position.z, ry: camera.rotation.y, name: getDisplayName() });
+        mpSend({
+          t: 'pos', x: camera.position.x, z: camera.position.z, ry: camera.rotation.y,
+          name: getDisplayName(),
+          charType: playerCustom.charType,
+          primary: playerCustom.primary,
+          accent: playerCustom.accent
+        });
         mpSend({ t: 'score', s: this.playerScore });
       }
     }
@@ -1672,19 +2288,30 @@ const game = {
     const text = document.getElementById('endText');
     const k = this.kills || 0, d = this.deaths || 0;
     const finalPts = (this.points || 0) + this.playerScore * 10 - d * 5;
-    // Winner = most blocks (walls) planted
-    if (this.playerScore > botTotal) {
-      title.textContent = 'VICTORY! 🎉';
+    const won = this.playerScore > botTotal;
+    if (won) {
+      title.textContent = CFG.ranked ? 'RANKED WIN! ⚔️' : 'VICTORY! 🎉';
       title.style.color = '#ff6b8a';
       text.textContent = `Most walls wins! ${this.playerScore} vs ${botTotal} · ${k} kills · ${finalPts} pts`;
     } else if (this.playerScore < botTotal) {
-      title.textContent = 'DEFEAT';
+      title.textContent = CFG.ranked ? 'RANKED LOSS' : 'DEFEAT';
       title.style.color = '#f87171';
       text.textContent = `Rival had more walls: ${botTotal} vs ${this.playerScore} · ${k} kills · ${finalPts} pts`;
     } else {
       title.textContent = 'DRAW';
       title.style.color = '#fbbf24';
       text.textContent = `Same walls ${this.playerScore} · ${k} kills · ${finalPts} pts`;
+    }
+    // Ranked rewards
+    if (CFG.ranked) {
+      const result = recordRankedResult(won, k, this.playerScore);
+      const L = getLeague(progression.mmr);
+      const sign = result.delta >= 0 ? '+' : '';
+      text.textContent += `\n${sign}${result.delta} MMR · +${result.xpGain} XP · ${getLeagueLabel(progression.mmr)}`;
+      if (result.after > result.before) {
+        const map = MAP_BY_LEAGUE[L.id];
+        if (map) text.textContent += `\nNext map: ${map.name}`;
+      }
     }
     if (!isTouch) document.exitPointerLock();
     isLocked = false;
@@ -1695,12 +2322,47 @@ const game = {
       const nameIn = document.getElementById('playerNameInput');
       if (nameIn && !nameIn.value) nameIn.value = getDisplayName();
     }
-    // Auto-save ranking when authenticated
     if (isAuthenticated()) {
       addRankEntry(getDisplayName(), this.playerScore, k, d, finalPts);
     }
   }
 };
+
+function startRankedMatch() {
+  if (!requireAuth()) return;
+  const overlay = document.getElementById('matchmakingOverlay');
+  const sub = document.getElementById('mmSub');
+  const L = getLeague(progression.mmr);
+  const map = MAP_BY_LEAGUE[L.id] || CASUAL_MAP;
+  if (sub) sub.textContent = `${L.emoji} ${getLeagueLabel(progression.mmr)} · ${map.name}`;
+  if (overlay) overlay.classList.add('visible');
+
+  // Soft matchmaking: short delay then bot lobby of your league
+  const wait = 1200 + Math.random() * 1800;
+  setTimeout(() => {
+    if (overlay) overlay.classList.remove('visible');
+    CFG.ranked = true;
+    mp.mode = 'solo';
+    rebuildGridForMap(map);
+    game.resetWorld();
+    // Scale bot aggression slightly by league
+    game.bots.forEach((b, i) => {
+      b.speed = CFG.BOT_SPEED * (0.95 + i * 0.05);
+    });
+    updateRankedUI();
+    startGame();
+    showKillToast(`${L.emoji} ${map.name}`);
+  }, wait);
+}
+
+function startCasualMatch() {
+  if (!requireAuth()) return;
+  CFG.ranked = false;
+  mp.mode = 'solo';
+  rebuildGridForMap(CASUAL_MAP);
+  game.resetWorld();
+  startGame();
+}
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
