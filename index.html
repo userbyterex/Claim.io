@@ -35,7 +35,48 @@
   .hud-box { background:rgba(12,28,48,0.72); border:1px solid rgba(255,255,255,0.18); border-radius:14px; padding:9px 16px; backdrop-filter:blur(10px); min-width:70px; text-align:center; }
   .hud-label { font-size:10px; text-transform:uppercase; letter-spacing:1.3px; color:#a8c4d8; font-weight:600; }
   .hud-value { font-size:24px; font-weight:700; line-height:1.2; }
-  #hudTime { color:#ffd54f; } #hudPlayer { color:#ff6b8a; } #hudBot { color:#69f0ae; }
+  #hudTime { color:#ffd54f; } #hudPlayer { color:#ff6b8a; } #hudBot { color:#69f0ae; } #hudKills { color:#ffd54f; }
+  #killToast {
+    position:fixed; top:80px; left:50%; transform:translateX(-50%) translateY(-20px);
+    background:rgba(255,40,60,0.9); color:#fff; padding:10px 22px; border-radius:12px;
+    font-weight:700; font-size:16px; z-index:50; opacity:0; pointer-events:none;
+    transition:opacity 0.25s, transform 0.25s; box-shadow:0 4px 20px rgba(255,40,60,0.4);
+  }
+  #killToast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  #rankBtn {
+    margin-top:10px; padding:10px 28px; font-size:15px; font-weight:700; font-family:inherit;
+    border:2px solid rgba(255,255,255,0.35); border-radius:12px; cursor:pointer;
+    background:rgba(255,255,255,0.12); color:#fff;
+  }
+  #rankPanel {
+    display:none; position:fixed; inset:0; background:rgba(10,25,45,0.95); z-index:250;
+    flex-direction:column; align-items:center; justify-content:center; padding:24px;
+  }
+  #rankPanel.visible { display:flex; }
+  #rankPanel h2 { font-size:28px; margin-bottom:16px; color:#ffd54f; }
+  #rankList { list-style:none; width:100%; max-width:340px; margin-bottom:20px; }
+  #rankList li {
+    display:flex; justify-content:space-between; padding:10px 14px; margin:6px 0;
+    background:rgba(255,255,255,0.08); border-radius:10px; font-size:15px;
+  }
+  #rankList li .pos { color:#ffd54f; font-weight:700; min-width:28px; }
+  #rankList li .name { flex:1; text-align:left; padding:0 10px; }
+  #rankList li .pts { color:#69f0ae; font-weight:700; }
+  #btnCloseRank {
+    padding:12px 32px; font-size:16px; font-weight:700; font-family:inherit;
+    border:none; border-radius:12px; background:linear-gradient(135deg,#ff4d6d,#c9184a);
+    color:#fff; cursor:pointer;
+  }
+  #namePrompt {
+    display:none; margin-top:14px; background:rgba(0,0,0,0.3); border-radius:14px;
+    padding:14px 18px; max-width:300px; width:100%;
+  }
+  #namePrompt.visible { display:block; }
+  #namePrompt input {
+    width:100%; padding:10px; border-radius:10px; border:2px solid rgba(255,255,255,0.3);
+    background:rgba(255,255,255,0.15); color:#fff; font-size:16px; font-family:inherit;
+    text-align:center; margin:8px 0; outline:none;
+  }
   #crosshair { position:fixed; top:50%; left:50%; width:24px; height:24px; transform:translate(-50%,-50%); pointer-events:none; z-index:5; opacity:0; }
   .desktop #crosshair { opacity:0.85; }
   #crosshair::before,#crosshair::after { content:''; position:absolute; background:rgba(255,255,255,0.9); border-radius:1px; }
@@ -87,6 +128,7 @@
     <button id="btnHost" type="button">🌐 HOST</button>
     <button id="btnJoin" type="button">🔗 JOIN</button>
   </div>
+  <button id="rankBtn" type="button">🏆 RANKING</button>
   <div id="mpPanel">
     <div class="room-code" id="roomCodeDisplay">----</div>
     <input id="joinCodeInput" type="text" maxlength="6" placeholder="ROOM CODE" autocomplete="off" autocapitalize="characters">
@@ -99,11 +141,13 @@
 </div>
 <div id="hud">
   <div class="hud-box"><div class="hud-label">Time</div><div class="hud-value" id="hudTime">2:00</div></div>
-  <div style="display:flex;gap:10px;">
-    <div class="hud-box"><div class="hud-label">Your walls</div><div class="hud-value" id="hudPlayer">0</div></div>
-    <div class="hud-box"><div class="hud-label">Rival walls</div><div class="hud-value" id="hudBot">0</div></div>
+  <div style="display:flex;gap:8px;">
+    <div class="hud-box"><div class="hud-label">Walls</div><div class="hud-value" id="hudPlayer">0</div></div>
+    <div class="hud-box"><div class="hud-label">Rival</div><div class="hud-value" id="hudBot">0</div></div>
+    <div class="hud-box"><div class="hud-label">Kills</div><div class="hud-value" id="hudKills">0</div></div>
   </div>
 </div>
+<div id="killToast"></div>
 <div id="crosshair"></div>
 <div id="powerupBar">
   <div class="pup pup-speed" id="pupSpeed">⚡ Speed</div>
@@ -121,7 +165,18 @@
 <div id="overlayEnd">
   <h2 id="endTitle">Round over!</h2>
   <p id="endText">Result</p>
+  <div id="namePrompt">
+    <div style="font-size:14px;color:#b0c8d8;">Save score to ranking</div>
+    <input id="playerNameInput" type="text" maxlength="12" placeholder="Your name" autocomplete="off">
+    <button id="btnSaveScore" type="button" style="width:100%;margin-top:4px;padding:12px;font-size:15px;font-weight:700;font-family:inherit;border:none;border-radius:12px;background:linear-gradient(135deg,#4ade80,#16a34a);color:#fff;cursor:pointer;">Save score</button>
+  </div>
   <button id="btnRestart" type="button">Play again</button>
+  <button id="btnShowRankEnd" type="button" style="margin-top:10px;padding:10px 24px;font-size:14px;font-weight:700;font-family:inherit;border:2px solid rgba(255,255,255,0.3);border-radius:12px;background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;">🏆 Ranking</button>
+</div>
+<div id="rankPanel">
+  <h2>🏆 Ranking</h2>
+  <ul id="rankList"></ul>
+  <button id="btnCloseRank" type="button">Close</button>
 </div>
 <script>
 const CFG = {
@@ -390,7 +445,20 @@ function findRespawnPos() {
   return { x: 0, z: 0, tx: Math.floor(CFG.GRID / 2), tz: Math.floor(CFG.GRID / 2) };
 }
 
-function respawnPlayer() {
+function showKillToast(msg) {
+  const el = document.getElementById('killToast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showKillToast._t);
+  showKillToast._t = setTimeout(() => el.classList.remove('show'), 1600);
+}
+
+function respawnPlayer(fromKill) {
+  if (fromKill) {
+    game.deaths = (game.deaths || 0) + 1;
+    showKillToast('💀 Crushed!');
+  }
   const p = findRespawnPos();
   camera.position.x = p.x; camera.position.z = p.z; camera.position.y = 1.75;
   playerVelY.v = 0; onGround.value = true;
@@ -408,18 +476,33 @@ function respawnBot(bot) {
 }
 
 function crushOccupants(tileX, tileZ, raisedBy) {
+  // Player gets crushed by bot/rival wall
   if (raisedBy !== 'player') {
     const pi = getTileIdx(camera.position.x, camera.position.z);
-    if (pi && pi.x === tileX && pi.z === tileZ && game.playerShield <= 0) respawnPlayer();
+    if (pi && pi.x === tileX && pi.z === tileZ && game.playerShield <= 0) {
+      respawnPlayer(true);
+    }
   }
+  // Player or rival crushes bots
   for (const b of game.bots) {
     if (b.id === raisedBy || b.shield > 0) continue;
     const bi = getTileIdx(b.mesh.position.x, b.mesh.position.z);
-    if (bi && bi.x === tileX && bi.z === tileZ) respawnBot(b);
+    if (bi && bi.x === tileX && bi.z === tileZ) {
+      respawnBot(b);
+      if (raisedBy === 'player') {
+        game.kills = (game.kills || 0) + 1;
+        showKillToast('⚔ Kill! +1');
+      }
+    }
   }
+  // Player crushes remote rival in multiplayer
   if (raisedBy === 'player' && mp.ready && mp.remoteMesh) {
     const ri = getTileIdx(mp.remoteMesh.position.x, mp.remoteMesh.position.z);
-    if (ri && ri.x === tileX && ri.z === tileZ) mpSend({ t: 'crush' });
+    if (ri && ri.x === tileX && ri.z === tileZ) {
+      game.kills = (game.kills || 0) + 1;
+      showKillToast('⚔ Rival crushed!');
+      mpSend({ t: 'crush' });
+    }
   }
 }
 
@@ -761,7 +844,21 @@ function bindTap(el, fn) {
 }
 
 bindTap(btnStart, startGame);
-bindTap(btnRestart, () => { game.restart(); startGame(); });
+bindTap(btnRestart, () => {
+  document.getElementById('namePrompt')?.classList.remove('visible');
+  game.restart();
+  startGame();
+});
+bindTap(document.getElementById('rankBtn'), showRankPanel);
+bindTap(document.getElementById('btnCloseRank'), hideRankPanel);
+bindTap(document.getElementById('btnShowRankEnd'), showRankPanel);
+bindTap(document.getElementById('btnSaveScore'), () => {
+  const name = (document.getElementById('playerNameInput')?.value || 'Player').trim() || 'Player';
+  addRankEntry(name, game.playerScore, game.kills || 0, game.deaths || 0);
+  document.getElementById('namePrompt')?.classList.remove('visible');
+  showKillToast('🏆 Score saved!');
+  showRankPanel();
+});
 
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement === renderer.domElement) {
@@ -927,7 +1024,7 @@ function mpOnData(data) {
     claimTile(data.x, data.z, data.owner, !!data.force);
     ejectFromTile(data.x, data.z, camera.position, 'player');
   } else if (data.t === 'crush') {
-    if (game.playerShield <= 0) respawnPlayer();
+    if (game.playerShield <= 0) respawnPlayer(true);
   } else if (data.t === 'bomb') {
     placeBomb(data.owner, data.x, data.z);
   } else if (data.t === 'score') {
@@ -1053,9 +1150,57 @@ if (joinInput) {
   });
 }
 
+// ===== RANKING (localStorage) =====
+const RANK_KEY = 'claimio_rank_v1';
+function loadRanking() {
+  try {
+    const raw = localStorage.getItem(RANK_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+function saveRanking(list) {
+  try { localStorage.setItem(RANK_KEY, JSON.stringify(list.slice(0, 15))); } catch (e) {}
+}
+function addRankEntry(name, walls, kills, deaths) {
+  const list = loadRanking();
+  const pts = walls * 10 + kills * 25 - deaths * 5;
+  list.push({
+    name: (name || 'Player').slice(0, 12),
+    walls: walls || 0,
+    kills: kills || 0,
+    deaths: deaths || 0,
+    pts,
+    date: Date.now()
+  });
+  list.sort((a, b) => b.pts - a.pts);
+  saveRanking(list);
+  return list;
+}
+function renderRanking() {
+  const list = loadRanking();
+  const ul = document.getElementById('rankList');
+  if (!ul) return;
+  if (!list.length) {
+    ul.innerHTML = '<li style="justify-content:center;color:#8899aa;">No scores yet — play a round!</li>';
+    return;
+  }
+  ul.innerHTML = list.slice(0, 10).map((e, i) =>
+    `<li><span class="pos">#${i + 1}</span><span class="name">${e.name}</span><span class="pts">${e.pts} pts · ${e.kills}K</span></li>`
+  ).join('');
+}
+function showRankPanel() {
+  renderRanking();
+  document.getElementById('rankPanel').classList.add('visible');
+}
+function hideRankPanel() {
+  document.getElementById('rankPanel').classList.remove('visible');
+}
+
 const game = {
   state: 'menu',
   playerScore: 0,
+  kills: 0,
+  deaths: 0,
   playerSpeedBoost: 0,
   playerShield: 0,
   playerBombs: 0,
@@ -1087,6 +1232,8 @@ const game = {
     playerVelY.v = 0;
     onGround.value = true;
     this.playerScore = 0;
+    this.kills = 0;
+    this.deaths = 0;
     this.playerSpeedBoost = this.playerShield = 0;
     this.playerBombs = CFG.START_BOMBS;
     while (traps.length) {
@@ -1219,6 +1366,8 @@ const game = {
       ? (mp.remoteScore || 0)
       : this.bots.reduce((a, b) => a + b.score, 0);
     document.getElementById('hudBot').textContent = rival;
+    const kEl = document.getElementById('hudKills');
+    if (kEl) kEl.textContent = this.kills || 0;
     document.getElementById('pupSpeed').classList.toggle('active', this.playerSpeedBoost > 0);
     document.getElementById('pupShield').classList.toggle('active', this.playerShield > 0);
     document.getElementById('pupBomb').classList.toggle('active', this.playerBombs > 0);
@@ -1232,22 +1381,25 @@ const game = {
     const title = document.getElementById('endTitle');
     const text = document.getElementById('endText');
     const totalTiles = CFG.GRID * CFG.GRID;
+    const k = this.kills || 0, d = this.deaths || 0;
     if (this.playerScore > botTotal) {
       title.textContent = 'VICTORY! 🎉';
       title.style.color = '#ff6b8a';
-      text.textContent = `Walls raised: ${this.playerScore} vs ${botTotal} (of ${totalTiles})`;
+      text.textContent = `Walls ${this.playerScore} vs ${botTotal} · Kills ${k} · Deaths ${d}`;
     } else if (this.playerScore < botTotal) {
       title.textContent = 'DEFEAT';
       title.style.color = '#f87171';
-      text.textContent = `Rival walls: ${botTotal} vs yours ${this.playerScore}`;
+      text.textContent = `Rival ${botTotal} vs you ${this.playerScore} · Kills ${k} · Deaths ${d}`;
     } else {
       title.textContent = 'DRAW';
       title.style.color = '#fbbf24';
-      text.textContent = `${this.playerScore} to ${botTotal} walls`;
+      text.textContent = `${this.playerScore}–${botTotal} walls · Kills ${k} · Deaths ${d}`;
     }
     if (!isTouch) document.exitPointerLock();
     isLocked = false;
     document.getElementById('overlayEnd').classList.add('visible');
+    const prompt = document.getElementById('namePrompt');
+    if (prompt) prompt.classList.add('visible');
   }
 };
 
