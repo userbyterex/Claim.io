@@ -35,14 +35,48 @@
   .hud-box { background:rgba(12,28,48,0.72); border:1px solid rgba(255,255,255,0.18); border-radius:14px; padding:9px 16px; backdrop-filter:blur(10px); min-width:70px; text-align:center; }
   .hud-label { font-size:10px; text-transform:uppercase; letter-spacing:1.3px; color:#a8c4d8; font-weight:600; }
   .hud-value { font-size:24px; font-weight:700; line-height:1.2; }
-  #hudTime { color:#ffd54f; } #hudPlayer { color:#ff6b8a; } #hudBot { color:#69f0ae; } #hudKills { color:#ffd54f; }
+  #hudTime { color:#ffd54f; } #hudPlayer { color:#ff6b8a; } #hudBot { color:#69f0ae; } #hudKills { color:#ffd54f; } #hudPts { color:#a78bfa; }
   #killToast {
     position:fixed; top:80px; left:50%; transform:translateX(-50%) translateY(-20px);
-    background:rgba(255,40,60,0.9); color:#fff; padding:10px 22px; border-radius:12px;
-    font-weight:700; font-size:16px; z-index:50; opacity:0; pointer-events:none;
-    transition:opacity 0.25s, transform 0.25s; box-shadow:0 4px 20px rgba(255,40,60,0.4);
+    background:rgba(255,40,60,0.92); color:#fff; padding:12px 24px; border-radius:12px;
+    font-weight:700; font-size:15px; z-index:50; opacity:0; pointer-events:none;
+    transition:opacity 0.25s, transform 0.25s; box-shadow:0 4px 20px rgba(255,40,60,0.45);
+    text-align:center; max-width:90vw;
   }
   #killToast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  #killFeed {
+    position:fixed; top:70px; right:12px; z-index:40; pointer-events:none;
+    display:flex; flex-direction:column; gap:6px; max-width:230px;
+  }
+  .feed-item {
+    background:rgba(12,20,36,0.88); border-left:3px solid #ff4d6d; padding:6px 10px;
+    border-radius:6px; font-size:12px; font-weight:600; color:#ffe0e6;
+    animation:feedIn 0.3s ease;
+  }
+  .feed-item .pts { color:#ffd54f; }
+  @keyframes feedIn { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:none} }
+  #authBar {
+    display:flex; align-items:center; gap:8px; margin-top:10px; background:rgba(0,0,0,0.25);
+    padding:8px 14px; border-radius:14px; font-size:13px;
+  }
+  #authBar .name { font-weight:700; color:#ffd54f; }
+  #authBar button, #btnLogin, #btnGuest, #btnLogout, #btnSendCode, #btnVerifyCode {
+    padding:6px 14px; border-radius:10px; border:none; font-size:13px; font-weight:700;
+    font-family:inherit; cursor:pointer; background:rgba(255,255,255,0.18); color:#fff;
+  }
+  #btnLogin { background:linear-gradient(135deg,#6366f1,#4f46e5); }
+  #btnGuest { background:rgba(255,255,255,0.15); }
+  #loginPanel {
+    display:none; margin-top:12px; background:rgba(0,0,0,0.28); border-radius:14px;
+    padding:14px 16px; max-width:300px; width:100%;
+  }
+  #loginPanel.visible { display:block; }
+  #loginPanel input {
+    width:100%; padding:10px; border-radius:10px; border:2px solid rgba(255,255,255,0.3);
+    background:rgba(255,255,255,0.12); color:#fff; font-size:15px; font-family:inherit;
+    text-align:center; margin:6px 0; outline:none;
+  }
+  #loginPanel .hint { font-size:12px; color:#c8dce8; margin-bottom:6px; line-height:1.35; }
   #rankBtn {
     margin-top:10px; padding:10px 28px; font-size:15px; font-weight:700; font-family:inherit;
     border:2px solid rgba(255,255,255,0.35); border-radius:12px; cursor:pointer;
@@ -116,12 +150,27 @@
 <body>
 <div id="blocker">
   <div class="logo">CLAIM.IO</div>
-  <p class="tagline">Raise walls · Crush rivals under blocks · Mine to clear · Solo or 1v1!</p>
+  <p class="tagline">Raise walls · Eliminate rivals · Most blocks wins · Solo or 1v1!</p>
   <div class="keys" id="controlsDesktop">
     <span class="key">WASD</span><span class="key">MOUSE</span><span class="key">CLICK = Mine</span><span class="key">B = Bomb</span><span class="key">SPACE = Jump</span>
   </div>
   <div class="keys hidden" id="controlsMobile">
     <span class="key">Joystick</span><span class="key">Swipe</span><span class="key">MINE</span><span class="key">💣 / JUMP</span>
+  </div>
+  <div id="authBar">
+    <span>Playing as <span class="name" id="authName">Not signed in</span></span>
+    <button id="btnLogin" type="button">Log in</button>
+    <button id="btnLogout" type="button" class="hidden">Log out</button>
+  </div>
+  <div id="loginPanel">
+    <div class="hint">🔐 Sign in with email to play (same Privy as Robin's Arena)</div>
+    <input id="emailInput" type="email" placeholder="you@email.com" autocomplete="email">
+    <input id="otpInput" type="text" maxlength="8" placeholder="6-digit code" class="hidden" inputmode="numeric" autocomplete="one-time-code">
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap;">
+      <button id="btnSendCode" type="button">Send code</button>
+      <button id="btnVerifyCode" type="button" class="hidden">Verify & play</button>
+    </div>
+    <div class="hint" id="loginStatus" style="margin-top:8px;"></div>
   </div>
   <div class="menu-btns">
     <button id="btnStart" type="button">▶  SOLO</button>
@@ -141,13 +190,15 @@
 </div>
 <div id="hud">
   <div class="hud-box"><div class="hud-label">Time</div><div class="hud-value" id="hudTime">2:00</div></div>
-  <div style="display:flex;gap:8px;">
+  <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
     <div class="hud-box"><div class="hud-label">Walls</div><div class="hud-value" id="hudPlayer">0</div></div>
     <div class="hud-box"><div class="hud-label">Rival</div><div class="hud-value" id="hudBot">0</div></div>
     <div class="hud-box"><div class="hud-label">Kills</div><div class="hud-value" id="hudKills">0</div></div>
+    <div class="hud-box"><div class="hud-label">Pts</div><div class="hud-value" id="hudPts">0</div></div>
   </div>
 </div>
 <div id="killToast"></div>
+<div id="killFeed"></div>
 <div id="crosshair"></div>
 <div id="powerupBar">
   <div class="pup pup-speed" id="pupSpeed">⚡ Speed</div>
@@ -445,19 +496,214 @@ function findRespawnPos() {
   return { x: 0, z: 0, tx: Math.floor(CFG.GRID / 2), tz: Math.floor(CFG.GRID / 2) };
 }
 
+// ===== AUTH — same Privy setup as Robin's Arena =====
+// App ID from robins-arena (dashboard.privy.io)
+const PRIVY_APP_ID = 'cmsbqsb7s01rx0djo13n8wy9b';
+
+const auth = {
+  user: null,
+  privy: null,
+  ready: false,
+  pendingEmail: ''
+};
+
+function getDisplayName() {
+  if (!auth.user) return 'Player';
+  if (auth.user.name) return auth.user.name;
+  if (auth.user.email) return String(auth.user.email).split('@')[0].slice(0, 12);
+  if (auth.user.id) return 'Player_' + String(auth.user.id).slice(-4);
+  return 'Player';
+}
+
+function getUserId() {
+  return auth.user && auth.user.id ? auth.user.id : null;
+}
+
+function isAuthenticated() {
+  return !!(auth.user && auth.user.id);
+}
+
+function setAuthMsg(text, isError) {
+  const el = document.getElementById('loginStatus');
+  if (!el) return;
+  el.textContent = text || '';
+  el.style.color = isError ? '#f87171' : '#c8dce8';
+}
+
+function updateAuthUI() {
+  const nameEl = document.getElementById('authName');
+  const btnLogin = document.getElementById('btnLogin');
+  const btnLogout = document.getElementById('btnLogout');
+  const panel = document.getElementById('loginPanel');
+  if (nameEl) nameEl.textContent = isAuthenticated() ? getDisplayName() : 'Not signed in';
+  if (btnLogin) btnLogin.classList.toggle('hidden', isAuthenticated());
+  if (btnLogout) btnLogout.classList.toggle('hidden', !isAuthenticated());
+  if (panel && isAuthenticated()) panel.classList.remove('visible');
+  // Lock play buttons until logged in
+  ['btnStart', 'btnHost', 'btnJoin'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.disabled = !isAuthenticated();
+    el.style.opacity = isAuthenticated() ? '1' : '0.45';
+  });
+}
+
+function applyUserFromPrivy(u) {
+  if (!u) return;
+  const email = (u.email && u.email.address) || (u.google && u.google.email) || '';
+  const name = email
+    ? email.split('@')[0].slice(0, 12)
+    : (u.id ? 'Player_' + String(u.id).slice(-4) : 'Player');
+  auth.user = { id: u.id || email, name, email, raw: u };
+  updateAuthUI();
+}
+
+function loadPrivySdk() {
+  if (auth.privy) return Promise.resolve(auth.privy);
+  return import('https://esm.sh/@privy-io/js-sdk-core@0.68.5').then(mod => {
+    const PrivyCtor = mod.default || mod.Privy;
+    const LocalStorage = mod.LocalStorage;
+    const opts = { appId: PRIVY_APP_ID };
+    if (LocalStorage) opts.storage = new LocalStorage();
+    auth.privy = new PrivyCtor(opts);
+    return auth.privy.initialize().then(() => auth.privy);
+  });
+}
+
+function initAuth() {
+  setAuthMsg('Loading auth…');
+  return loadPrivySdk()
+    .then(() => {
+      if (auth.privy.user && typeof auth.privy.user.get === 'function') {
+        return auth.privy.user.get().then(res => {
+          const u = res && res.user ? res.user : null;
+          if (u) applyUserFromPrivy(u);
+        });
+      }
+    })
+    .catch(err => {
+      console.error('[Auth] init', err);
+      setAuthMsg('Auth issue — try Send code', true);
+    })
+    .then(() => {
+      auth.ready = true;
+      updateAuthUI();
+      if (!isAuthenticated()) {
+        setAuthMsg('Sign in with email to play');
+        document.getElementById('loginPanel')?.classList.add('visible');
+      } else {
+        setAuthMsg('Welcome, ' + getDisplayName() + '!');
+      }
+    });
+}
+
+function authSendCode() {
+  const input = document.getElementById('emailInput') || document.getElementById('displayNameInput');
+  const email = (document.getElementById('emailInput')?.value || '').trim();
+  if (!email || email.indexOf('@') < 1) {
+    setAuthMsg('Enter a valid email', true);
+    return;
+  }
+  setAuthMsg('Sending code…');
+  auth.pendingEmail = email;
+  loadPrivySdk()
+    .then(() => {
+      if (!auth.privy.auth || !auth.privy.auth.email || !auth.privy.auth.email.sendCode) {
+        setAuthMsg('Enable Email login in Privy Dashboard', true);
+        return null;
+      }
+      return auth.privy.auth.email.sendCode(email).then(() => {
+        document.getElementById('otpInput')?.classList.remove('hidden');
+        document.getElementById('btnVerifyCode')?.classList.remove('hidden');
+        setAuthMsg('Code sent! Check your email, then enter it here.');
+        document.getElementById('otpInput')?.focus();
+      });
+    })
+    .catch(err => {
+      console.error('[Auth] sendCode', err);
+      setAuthMsg('Send failed: ' + (err.message || err), true);
+    });
+}
+
+function authVerifyCode() {
+  const code = (document.getElementById('otpInput')?.value || '').trim();
+  if (!auth.pendingEmail) {
+    setAuthMsg('Enter email first', true);
+    return;
+  }
+  if (!code) {
+    setAuthMsg('Enter the code from your email', true);
+    return;
+  }
+  setAuthMsg('Verifying…');
+  loadPrivySdk()
+    .then(() => auth.privy.auth.email.loginWithCode(auth.pendingEmail, code))
+    .then(loginRes => {
+      const u = loginRes && loginRes.user ? loginRes.user : loginRes;
+      applyUserFromPrivy(u);
+      setAuthMsg('Welcome, ' + getDisplayName() + '!');
+      document.getElementById('loginPanel')?.classList.remove('visible');
+    })
+    .catch(err => {
+      console.error('[Auth] verify', err);
+      setAuthMsg('Invalid or expired code. Try again.', true);
+    });
+}
+
+function authLogout() {
+  const p = (auth.privy && auth.privy.auth && auth.privy.auth.logout)
+    ? auth.privy.auth.logout()
+    : Promise.resolve();
+  Promise.resolve(p).then(() => {
+    auth.user = null;
+    auth.pendingEmail = '';
+    updateAuthUI();
+    setAuthMsg('Signed out — log in to play');
+    document.getElementById('loginPanel')?.classList.add('visible');
+  });
+}
+
+function requireAuth() {
+  if (isAuthenticated()) return true;
+  document.getElementById('loginPanel')?.classList.add('visible');
+  setAuthMsg('Login required to play', true);
+  return false;
+}
+
 function showKillToast(msg) {
   const el = document.getElementById('killToast');
   if (!el) return;
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(showKillToast._t);
-  showKillToast._t = setTimeout(() => el.classList.remove('show'), 1600);
+  showKillToast._t = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+function pushKillFeed(text, pts) {
+  const feed = document.getElementById('killFeed');
+  if (!feed) return;
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = pts ? `${text} <span class="pts">+${pts}</span>` : text;
+  feed.prepend(item);
+  while (feed.children.length > 5) feed.removeChild(feed.lastChild);
+  setTimeout(() => { if (item.parentNode) item.remove(); }, 4500);
+}
+
+function awardKill(victimName) {
+  const pts = 25;
+  game.kills = (game.kills || 0) + 1;
+  game.points = (game.points || 0) + pts;
+  const name = victimName || 'Rival';
+  showKillToast(`${name} eliminated · +${pts} pts`);
+  pushKillFeed(`${name} eliminated`, pts);
 }
 
 function respawnPlayer(fromKill) {
   if (fromKill) {
     game.deaths = (game.deaths || 0) + 1;
-    showKillToast('💀 Crushed!');
+    showKillToast('You were eliminated!');
+    pushKillFeed(`${getDisplayName()} was eliminated`);
   }
   const p = findRespawnPos();
   camera.position.x = p.x; camera.position.z = p.z; camera.position.y = 1.75;
@@ -475,32 +721,29 @@ function respawnBot(bot) {
   bot.shield = Math.max(bot.shield, 1.2); bot.claimCd = 0.5;
 }
 
+const BOT_NAMES = ['Calamar', 'Cristal', 'Orbe'];
+
 function crushOccupants(tileX, tileZ, raisedBy) {
-  // Player gets crushed by bot/rival wall
   if (raisedBy !== 'player') {
     const pi = getTileIdx(camera.position.x, camera.position.z);
     if (pi && pi.x === tileX && pi.z === tileZ && game.playerShield <= 0) {
       respawnPlayer(true);
     }
   }
-  // Player or rival crushes bots
   for (const b of game.bots) {
     if (b.id === raisedBy || b.shield > 0) continue;
     const bi = getTileIdx(b.mesh.position.x, b.mesh.position.z);
     if (bi && bi.x === tileX && bi.z === tileZ) {
+      const idx = parseInt(String(b.id).replace('bot', ''), 10) || 0;
+      const victimName = BOT_NAMES[idx] || 'Bot';
       respawnBot(b);
-      if (raisedBy === 'player') {
-        game.kills = (game.kills || 0) + 1;
-        showKillToast('⚔ Kill! +1');
-      }
+      if (raisedBy === 'player') awardKill(victimName);
     }
   }
-  // Player crushes remote rival in multiplayer
   if (raisedBy === 'player' && mp.ready && mp.remoteMesh) {
     const ri = getTileIdx(mp.remoteMesh.position.x, mp.remoteMesh.position.z);
     if (ri && ri.x === tileX && ri.z === tileZ) {
-      game.kills = (game.kills || 0) + 1;
-      showKillToast('⚔ Rival crushed!');
+      awardKill(mp.remoteName || 'Rival');
       mpSend({ t: 'crush' });
     }
   }
@@ -813,6 +1056,7 @@ const btnRestart = document.getElementById('btnRestart');
 
 function startGame() {
   try {
+    if (!requireAuth()) return;
     if (typeof game === 'undefined') {
       alert('Game still loading, try again in a second');
       return;
@@ -853,12 +1097,39 @@ bindTap(document.getElementById('rankBtn'), showRankPanel);
 bindTap(document.getElementById('btnCloseRank'), hideRankPanel);
 bindTap(document.getElementById('btnShowRankEnd'), showRankPanel);
 bindTap(document.getElementById('btnSaveScore'), () => {
-  const name = (document.getElementById('playerNameInput')?.value || 'Player').trim() || 'Player';
-  addRankEntry(name, game.playerScore, game.kills || 0, game.deaths || 0);
+  const name = (document.getElementById('playerNameInput')?.value || getDisplayName()).trim() || getDisplayName();
+  const d = game.deaths || 0;
+  const finalPts = (game.points || 0) + game.playerScore * 10 - d * 5;
+  addRankEntry(name, game.playerScore, game.kills || 0, d, finalPts);
   document.getElementById('namePrompt')?.classList.remove('visible');
   showKillToast('🏆 Score saved!');
   showRankPanel();
 });
+
+// Auth UI (Robin's Arena style)
+bindTap(document.getElementById('btnLogin'), () => {
+  document.getElementById('loginPanel')?.classList.add('visible');
+  setAuthMsg('Enter your email to continue');
+  document.getElementById('emailInput')?.focus();
+});
+bindTap(document.getElementById('btnLogout'), () => authLogout());
+bindTap(document.getElementById('btnSendCode'), () => authSendCode());
+bindTap(document.getElementById('btnVerifyCode'), () => authVerifyCode());
+
+const emailInput = document.getElementById('emailInput');
+if (emailInput) {
+  emailInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); authSendCode(); }
+  });
+}
+const otpInput = document.getElementById('otpInput');
+if (otpInput) {
+  otpInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); authVerifyCode(); }
+  });
+}
+
+initAuth();
 
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement === renderer.domElement) {
@@ -1020,6 +1291,7 @@ function mpOnData(data) {
     mp.remoteMesh.position.y = Math.sin(performance.now() * 0.004) * 0.12;
     mp.remoteMesh.rotation.y = data.ry || 0;
     if (mp.remoteLight) mp.remoteLight.position.set(data.x, 1.2, data.z);
+    if (data.name) mp.remoteName = data.name;
   } else if (data.t === 'claim') {
     claimTile(data.x, data.z, data.owner, !!data.force);
     ejectFromTile(data.x, data.z, camera.position, 'player');
@@ -1029,6 +1301,9 @@ function mpOnData(data) {
     placeBomb(data.owner, data.x, data.z);
   } else if (data.t === 'score') {
     mp.remoteScore = data.s || 0;
+  } else if (data.t === 'hello') {
+    if (data.name) mp.remoteName = data.name;
+    mpStatus('Rival: ' + (mp.remoteName || 'Player'));
   } else if (data.t === 'start') {
     if (game.state === 'menu' || game.state === 'ended') {
       game.resetWorld();
@@ -1077,7 +1352,7 @@ function hostGame() {
     conn.on('open', () => {
       mp.ready = true;
       mpStatus('Connected!');
-      conn.send({ t: 'hello' });
+      conn.send({ t: 'hello', name: getDisplayName() });
     });
     conn.on('data', mpOnData);
     conn.on('close', () => { mpStatus('Rival disconnected'); mp.ready = false; });
@@ -1108,7 +1383,7 @@ function joinGame() {
     conn.on('open', () => {
       mp.ready = true;
       mpStatus('Connected!');
-      conn.send({ t: 'hello' });
+      conn.send({ t: 'hello', name: getDisplayName() });
     });
     conn.on('data', mpOnData);
     conn.on('close', () => { mpStatus('Disconnected'); mp.ready = false; });
@@ -1120,6 +1395,7 @@ function joinGame() {
 
 bindTap(document.getElementById('btnHost'), () => {
   try {
+    if (!requireAuth()) return;
     if (typeof Peer === 'undefined') {
       alert('PeerJS failed to load. Check internet and try again.');
       return;
@@ -1130,9 +1406,13 @@ bindTap(document.getElementById('btnHost'), () => {
     alert('Host error: ' + err.message);
   }
 });
-bindTap(document.getElementById('btnJoin'), showJoinPanel);
+bindTap(document.getElementById('btnJoin'), () => {
+  if (!requireAuth()) return;
+  showJoinPanel();
+});
 bindTap(document.getElementById('btnConfirmJoin'), () => {
   try {
+    if (!requireAuth()) return;
     if (typeof Peer === 'undefined') {
       alert('PeerJS failed to load. Check internet and try again.');
       return;
@@ -1161,18 +1441,20 @@ function loadRanking() {
 function saveRanking(list) {
   try { localStorage.setItem(RANK_KEY, JSON.stringify(list.slice(0, 15))); } catch (e) {}
 }
-function addRankEntry(name, walls, kills, deaths) {
+function addRankEntry(name, walls, kills, deaths, points) {
   const list = loadRanking();
-  const pts = walls * 10 + kills * 25 - deaths * 5;
+  const pts = typeof points === 'number'
+    ? points
+    : (walls * 10 + kills * 25 - deaths * 5);
   list.push({
-    name: (name || 'Player').slice(0, 12),
+    name: (name || getDisplayName()).slice(0, 14),
     walls: walls || 0,
     kills: kills || 0,
     deaths: deaths || 0,
     pts,
     date: Date.now()
   });
-  list.sort((a, b) => b.pts - a.pts);
+  list.sort((a, b) => b.pts - a.pts || b.kills - a.kills);
   saveRanking(list);
   return list;
 }
@@ -1185,7 +1467,7 @@ function renderRanking() {
     return;
   }
   ul.innerHTML = list.slice(0, 10).map((e, i) =>
-    `<li><span class="pos">#${i + 1}</span><span class="name">${e.name}</span><span class="pts">${e.pts} pts · ${e.kills}K</span></li>`
+    `<li><span class="pos">#${i + 1}</span><span class="name">${e.name}</span><span class="pts">${e.pts} pts · ${e.walls}W · ${e.kills}K</span></li>`
   ).join('');
 }
 function showRankPanel() {
@@ -1201,6 +1483,7 @@ const game = {
   playerScore: 0,
   kills: 0,
   deaths: 0,
+  points: 0,
   playerSpeedBoost: 0,
   playerShield: 0,
   playerBombs: 0,
@@ -1234,8 +1517,11 @@ const game = {
     this.playerScore = 0;
     this.kills = 0;
     this.deaths = 0;
+    this.points = 0;
     this.playerSpeedBoost = this.playerShield = 0;
     this.playerBombs = CFG.START_BOMBS;
+    const feed = document.getElementById('killFeed');
+    if (feed) feed.innerHTML = '';
     while (traps.length) {
       const t = traps.pop();
       scene.remove(t.mesh);
@@ -1341,7 +1627,7 @@ const game = {
       mp.syncAcc = (mp.syncAcc || 0) + dt;
       if (mp.syncAcc > 0.08) {
         mp.syncAcc = 0;
-        mpSend({ t: 'pos', x: camera.position.x, z: camera.position.z, ry: camera.rotation.y });
+        mpSend({ t: 'pos', x: camera.position.x, z: camera.position.z, ry: camera.rotation.y, name: getDisplayName() });
         mpSend({ t: 'score', s: this.playerScore });
       }
     }
@@ -1368,6 +1654,10 @@ const game = {
     document.getElementById('hudBot').textContent = rival;
     const kEl = document.getElementById('hudKills');
     if (kEl) kEl.textContent = this.kills || 0;
+    // Live points: walls*10 + kill points already tracked
+    const livePts = (this.points || 0) + this.playerScore * 10;
+    const pEl = document.getElementById('hudPts');
+    if (pEl) pEl.textContent = livePts;
     document.getElementById('pupSpeed').classList.toggle('active', this.playerSpeedBoost > 0);
     document.getElementById('pupShield').classList.toggle('active', this.playerShield > 0);
     document.getElementById('pupBomb').classList.toggle('active', this.playerBombs > 0);
@@ -1380,26 +1670,35 @@ const game = {
       : this.bots.reduce((a, b) => a + b.score, 0);
     const title = document.getElementById('endTitle');
     const text = document.getElementById('endText');
-    const totalTiles = CFG.GRID * CFG.GRID;
     const k = this.kills || 0, d = this.deaths || 0;
+    const finalPts = (this.points || 0) + this.playerScore * 10 - d * 5;
+    // Winner = most blocks (walls) planted
     if (this.playerScore > botTotal) {
       title.textContent = 'VICTORY! 🎉';
       title.style.color = '#ff6b8a';
-      text.textContent = `Walls ${this.playerScore} vs ${botTotal} · Kills ${k} · Deaths ${d}`;
+      text.textContent = `Most walls wins! ${this.playerScore} vs ${botTotal} · ${k} kills · ${finalPts} pts`;
     } else if (this.playerScore < botTotal) {
       title.textContent = 'DEFEAT';
       title.style.color = '#f87171';
-      text.textContent = `Rival ${botTotal} vs you ${this.playerScore} · Kills ${k} · Deaths ${d}`;
+      text.textContent = `Rival had more walls: ${botTotal} vs ${this.playerScore} · ${k} kills · ${finalPts} pts`;
     } else {
       title.textContent = 'DRAW';
       title.style.color = '#fbbf24';
-      text.textContent = `${this.playerScore}–${botTotal} walls · Kills ${k} · Deaths ${d}`;
+      text.textContent = `Same walls ${this.playerScore} · ${k} kills · ${finalPts} pts`;
     }
     if (!isTouch) document.exitPointerLock();
     isLocked = false;
     document.getElementById('overlayEnd').classList.add('visible');
     const prompt = document.getElementById('namePrompt');
-    if (prompt) prompt.classList.add('visible');
+    if (prompt) {
+      prompt.classList.add('visible');
+      const nameIn = document.getElementById('playerNameInput');
+      if (nameIn && !nameIn.value) nameIn.value = getDisplayName();
+    }
+    // Auto-save ranking when authenticated
+    if (isAuthenticated()) {
+      addRankEntry(getDisplayName(), this.playerScore, k, d, finalPts);
+    }
   }
 };
 
