@@ -1128,6 +1128,8 @@ function respawnBot(bot) {
   bot.shield = Math.max(bot.shield, 1.2); bot.claimCd = 0.5;
 }
 
+const CHAR_NAMES = ['Calamar', 'Cristal', 'Orbe', 'Golem'];
+const CHAR_EMOJIS = ['🦑', '💎', '🔮', '🗿'];
 const BOT_NAMES = CHAR_NAMES;
 
 function crushOccupants(tileX, tileZ, raisedBy) {
@@ -1156,8 +1158,6 @@ function crushOccupants(tileX, tileZ, raisedBy) {
   }
 }
 
-const CHAR_NAMES = ['Calamar', 'Cristal', 'Orbe', 'Golem'];
-const CHAR_EMOJIS = ['🦑', '💎', '🔮', '🗿'];
 const PRIMARY_COLORS = [0xff4d6d, 0x4ade80, 0x38bdf8, 0xfbbf24, 0xa78bfa, 0xf97316, 0xec4899, 0x14b8a6];
 const ACCENT_COLORS = [0xffffff, 0xffd54f, 0x111118, 0x38bdf8, 0xff6b8a, 0xa3e635];
 
@@ -1506,8 +1506,9 @@ class Bot {
     this.light.position.copy(this.mesh.position);
     this.light.position.y += 1.25;
   }
-        }
-  const powerups = [];
+}
+
+const powerups = [];
 const pupGeo = new THREE.SphereGeometry(0.58, 12, 12);
 
 function spawnPowerup() {
@@ -1932,7 +1933,8 @@ document.addEventListener('keydown', e => {
 
 const jumpBtn = document.getElementById('jumpBtn');
 if (jumpBtn) bindTap(jumpBtn, tryJump);
-  const mp = {
+
+const mp = {
   mode: 'solo',
   peer: null,
   conn: null,
