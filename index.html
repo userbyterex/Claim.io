@@ -6,12 +6,27 @@
 <title>Claim.io — Claim the Map</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
-  * { margin:0; padding:0; box-sizing:border-box; touch-action:none; -webkit-tap-highlight-color:transparent; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { width:100%; height:100%; background:#6EC6FF; color:#fff; font-family:'Fredoka',system-ui,sans-serif; overflow:hidden; position:fixed; }
-  canvas { display:block; width:100vw!important; height:100vh!important; position:fixed!important; top:0; left:0; z-index:1; }
-  #blocker { position:fixed; inset:0; background:linear-gradient(180deg,#87CEEB 0%,#4FA8D8 40%,#2E6B9A 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; padding:24px; text-align:center; }
-  #blocker .logo { font-size:clamp(48px,14vw,84px); font-weight:700; background:linear-gradient(135deg,#ff4d6d,#ff8fa3,#ffc0cb); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-2px; margin-bottom:8px; filter:drop-shadow(0 4px 24px rgba(255,77,109,0.5)); }
-  #blocker .tagline { font-size:16px; color:#e8f4fc; margin-bottom:18px; max-width:340px; line-height:1.45; text-shadow:0 1px 4px rgba(0,0,0,0.25); }
+  canvas { display:block; width:100vw!important; height:100vh!important; position:fixed!important; top:0; left:0; z-index:1; touch-action:none; }
+  #blocker {
+    position:fixed; inset:0; z-index:100;
+    background:linear-gradient(180deg,#87CEEB 0%,#4FA8D8 40%,#2E6B9A 100%);
+    display:flex; flex-direction:column; justify-content:flex-start; align-items:center;
+    padding:max(12px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+    text-align:center;
+    overflow-y:auto; overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    touch-action:pan-y;
+  }
+  #blocker > * { flex-shrink:0; }
+  @media (min-height: 820px) {
+    #blocker { justify-content:center; }
+  }
+  body.playing #blocker { display:none !important; }
+  #blocker .logo { font-size:clamp(36px,12vw,84px); font-weight:700; background:linear-gradient(135deg,#ff4d6d,#ff8fa3,#ffc0cb); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-2px; margin-bottom:6px; margin-top:8px; filter:drop-shadow(0 4px 24px rgba(255,77,109,0.5)); }
+  #blocker .tagline { font-size:14px; color:#e8f4fc; margin-bottom:12px; max-width:340px; line-height:1.45; text-shadow:0 1px 4px rgba(0,0,0,0.25); }
   #blocker .keys { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:18px; }
   #blocker .key { background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); padding:7px 14px; border-radius:10px; font-size:13px; color:#fff; }
   #btnStart, #btnHost, #btnJoin, #btnConfirmJoin, #btnRestart {
@@ -23,7 +38,12 @@
   #btnHost { background:linear-gradient(135deg,#38bdf8,#0284c7); box-shadow:0 8px 28px rgba(56,189,248,0.4); }
   #btnJoin, #btnConfirmJoin { background:linear-gradient(135deg,#4ade80,#16a34a); box-shadow:0 8px 28px rgba(74,222,128,0.4); }
   #btnStart:active, #btnHost:active, #btnJoin:active, #btnConfirmJoin:active { transform:scale(0.95); }
-  .menu-btns { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px; pointer-events:auto; position:relative; z-index:110; }
+  .menu-btns {
+    display:flex; flex-direction:column; flex-wrap:nowrap; gap:10px;
+    justify-content:center; align-items:stretch; margin-top:8px;
+    pointer-events:auto; position:relative; z-index:110; width:100%; max-width:280px;
+  }
+  .menu-btns button { width:100%; margin:0; }
   #mpPanel { display:none; margin-top:14px; background:rgba(0,0,0,0.25); border-radius:14px; padding:14px 18px; max-width:320px; width:100%; }
   #mpPanel.visible { display:block; }
   #mpPanel input { width:100%; padding:12px; border-radius:10px; border:2px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.15); color:#fff; font-size:18px; font-family:inherit; text-align:center; letter-spacing:3px; margin:8px 0; outline:none; }
@@ -191,8 +211,9 @@
   .pup-speed { background:rgba(56,189,248,0.25); color:#38bdf8; border-color:#38bdf8; }
   .pup-shield { background:rgba(168,85,247,0.25); color:#c084fc; border-color:#a855f7; }
   .pup-bomb { background:rgba(248,113,113,0.25); color:#f87171; border-color:#f87171; }
-  #touchControls { position:fixed; inset:0; pointer-events:none; z-index:20; display:none; }
+  #touchControls { position:fixed; inset:0; pointer-events:none; z-index:20; display:none; touch-action:none; }
   .touch-device #touchControls { display:block; }
+  #joystickZone { touch-action:none; }
   #joystickZone { position:absolute; bottom:28px; left:22px; width:160px; height:160px; pointer-events:auto; }
   #joystickBase { position:absolute; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.22); top:50%; left:50%; transform:translate(-50%,-50%); }
   #joystickThumb { position:absolute; width:52px; height:52px; border-radius:50%; background:rgba(255,77,109,0.6); border:2px solid rgba(255,255,255,0.4); top:50%; left:50%; transform:translate(-50%,-50%); }
@@ -1609,6 +1630,7 @@ function startGame() {
       return;
     }
     blocker.style.display = 'none';
+    document.body.classList.add('playing');
     isLocked = true;
     if (game.state === 'menu' || game.state === 'ended') game.startPlaying();
     if (!isTouch) {
@@ -1618,6 +1640,13 @@ function startGame() {
     console.error(err);
     alert('Start error: ' + err.message);
   }
+}
+
+function showMenu() {
+  document.body.classList.remove('playing');
+  blocker.style.display = 'flex';
+  isLocked = false;
+  if (!isTouch) try { document.exitPointerLock(); } catch (e) {}
 }
 
 function bindTap(el, fn) {
@@ -1638,8 +1667,11 @@ bindTap(btnStart, startCasualMatch);
 bindTap(document.getElementById('btnRanked'), startRankedMatch);
 bindTap(btnRestart, () => {
   document.getElementById('namePrompt')?.classList.remove('visible');
+  document.getElementById('overlayEnd')?.classList.remove('visible');
   game.restart();
-  startGame();
+  // Stay in ranked if last mode was ranked
+  if (CFG.ranked) startRankedMatch();
+  else startCasualMatch();
 });
 bindTap(document.getElementById('rankBtn'), showRankPanel);
 bindTap(document.getElementById('btnCloseRank'), hideRankPanel);
@@ -2123,12 +2155,21 @@ const game = {
   },
 
   restart() {
+    this.resetWorld();
+    document.getElementById('overlayEnd').classList.remove('visible');
+    document.getElementById('hudLeague').style.display = CFG.ranked ? 'block' : 'none';
+    this.state = 'menu';
+  },
+
+  backToMenu() {
     CFG.ranked = false;
     rebuildGridForMap(CASUAL_MAP);
     this.resetWorld();
     document.getElementById('overlayEnd').classList.remove('visible');
     document.getElementById('hudLeague').style.display = 'none';
     this.state = 'menu';
+    showMenu();
+    updateRankedUI();
   },
 
   lastTime: 0,
