@@ -1903,20 +1903,23 @@ function mpOnData(data) {
     mp.remoteScore = data.s || 0;
   } else if (data.t === 'hello') {
     if (data.name) mp.remoteName = data.name;
-    mpStatus('Rival: ' + (mp.remoteName || 'Player'));
-  } else if (data.t === 'start') {
-    if (game.state === 'menu' || game.state === 'ended') {
+    mpStatus('Rival connected: ' + (mp.remoteName || 'Player'));
+    mp.ready = true;
+    if (mp.mode === 'host' && (game.state === 'menu' || game.state === 'ended')) {
+      CFG.ranked = false;
+      rebuildGridForMap(CASUAL_MAP);
       game.resetWorld();
       for (const b of game.bots) { scene.remove(b.mesh); scene.remove(b.light); }
       game.bots = [];
       ensureRemoteMesh();
+      mpSend({ t: 'start' });
       startGame();
     }
-  } else if (data.t === 'hello') {
-    mpStatus('Rival connected! Starting...');
-    mp.ready = true;
-    if (mp.mode === 'host') {
-      mpSend({ t: 'start' });
+  } else if (data.t === 'start') {
+    if (game.state === 'menu' || game.state === 'ended') {
+      CFG.ranked = false;
+      rebuildGridForMap(CASUAL_MAP);
+      game.resetWorld();
       for (const b of game.bots) { scene.remove(b.mesh); scene.remove(b.light); }
       game.bots = [];
       ensureRemoteMesh();
