@@ -10,7 +10,7 @@
   html, body { width:100%; height:100%; background:#6EC6FF; color:#fff; font-family:'Fredoka',system-ui,sans-serif; overflow:hidden; position:fixed; }
   canvas { display:block; width:100vw!important; height:100vh!important; position:fixed!important; top:0; left:0; z-index:1; touch-action:none; }
   #blocker {
-    position:fixed; inset:0; z-index:100;
+    position:fixed; inset:0; z-index:9990;
     background:linear-gradient(180deg,#87CEEB 0%,#4FA8D8 40%,#2E6B9A 100%);
     display:flex; flex-direction:column; justify-content:flex-start; align-items:center;
     padding:max(12px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
@@ -18,13 +18,39 @@
     overflow-y:auto; overflow-x:hidden;
     -webkit-overflow-scrolling:touch;
     overscroll-behavior:contain;
-    touch-action:pan-y;
   }
   #blocker > * { flex-shrink:0; }
+  /* Interactive elements must receive taps even inside a scroll container */
+  #blocker button,
+  #blocker input,
+  #blocker select,
+  #blocker .char-card,
+  #blocker .color-swatch,
+  #blocker .pick-btn,
+  #blocker a {
+    touch-action: manipulation !important;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 5;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  #blocker input {
+    -webkit-user-select: text;
+    user-select: text;
+  }
   @media (min-height: 820px) {
     #blocker { justify-content:center; }
   }
   body.playing #blocker { display:none !important; }
+  /* Hide in-game touch layers while in menu so they never steal taps */
+  body:not(.playing) #touchControls,
+  body:not(.playing) #bombBtn,
+  body:not(.playing) #jumpBtn,
+  body:not(.playing) #camZone {
+    display: none !important;
+    pointer-events: none !important;
+  }
   #blocker .logo { font-size:clamp(36px,12vw,84px); font-weight:700; background:linear-gradient(135deg,#ff4d6d,#ff8fa3,#ffc0cb); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-2px; margin-bottom:6px; margin-top:8px; filter:drop-shadow(0 4px 24px rgba(255,77,109,0.5)); }
   #blocker .tagline { font-size:14px; color:#e8f4fc; margin-bottom:12px; max-width:340px; line-height:1.45; text-shadow:0 1px 4px rgba(0,0,0,0.25); }
   #blocker .keys { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:18px; }
@@ -212,7 +238,10 @@
   .pup-shield { background:rgba(168,85,247,0.25); color:#c084fc; border-color:#a855f7; }
   .pup-bomb { background:rgba(248,113,113,0.25); color:#f87171; border-color:#f87171; }
   #touchControls { position:fixed; inset:0; pointer-events:none; z-index:20; display:none; touch-action:none; }
-  .touch-device #touchControls { display:block; }
+  body.playing.touch-device #touchControls { display:block; }
+  body:not(.playing) #touchControls { display:none !important; pointer-events:none !important; }
+  body:not(.playing) #bombBtn,
+  body:not(.playing) #jumpBtn { display:none !important; pointer-events:none !important; }
   #joystickZone { touch-action:none; }
   #joystickZone { position:absolute; bottom:28px; left:22px; width:160px; height:160px; pointer-events:auto; }
   #joystickBase { position:absolute; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.22); top:50%; left:50%; transform:translate(-50%,-50%); }
@@ -253,12 +282,13 @@
     <button id="btnLogout" type="button" class="hidden">Log out</button>
   </div>
   <div id="loginPanel">
-    <div class="hint">🔐 Sign in with email to play (same Privy as Robin's Arena)</div>
+    <div class="hint">🔐 Email login (optional) — or play as guest</div>
     <input id="emailInput" type="email" placeholder="you@email.com" autocomplete="email">
     <input id="otpInput" type="text" maxlength="8" placeholder="6-digit code" class="hidden" inputmode="numeric" autocomplete="one-time-code">
     <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap;">
       <button id="btnSendCode" type="button">Send code</button>
       <button id="btnVerifyCode" type="button" class="hidden">Verify & play</button>
+      <button id="btnGuest" type="button">Play as guest</button>
     </div>
     <div class="hint" id="loginStatus" style="margin-top:8px;"></div>
   </div>
@@ -905,12 +935,12 @@ function updateAuthUI() {
   if (btnLogin) btnLogin.classList.toggle('hidden', isAuthenticated());
   if (btnLogout) btnLogout.classList.toggle('hidden', !isAuthenticated());
   if (panel && isAuthenticated()) panel.classList.remove('visible');
-  // Lock play buttons until logged in
+  // Visual hint only — never disable (disabled buttons ignore taps on mobile)
   ['btnStart', 'btnHost', 'btnJoin', 'btnRanked'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.disabled = !isAuthenticated();
-    el.style.opacity = isAuthenticated() ? '1' : '0.45';
+    el.disabled = false;
+    el.style.opacity = isAuthenticated() ? '1' : '0.7';
   });
 }
 
@@ -1029,11 +1059,22 @@ function authLogout() {
   });
 }
 
+function setGuestPlayer(name) {
+  const n = (name || 'Player' + Math.floor(Math.random() * 900 + 100)).trim().slice(0, 14);
+  auth.user = { id: 'guest-' + n.toLowerCase(), name: n, email: null, guest: true };
+  try { localStorage.setItem('claimio_guest_name', n); } catch (e) {}
+  updateAuthUI();
+  document.getElementById('loginPanel')?.classList.remove('visible');
+  setAuthMsg('Playing as ' + n);
+  return true;
+}
+
 function requireAuth() {
   if (isAuthenticated()) return true;
-  document.getElementById('loginPanel')?.classList.add('visible');
-  setAuthMsg('Login required to play', true);
-  return false;
+  // Auto-guest so buttons always work; user can still log in for ranking
+  const saved = localStorage.getItem('claimio_guest_name');
+  setGuestPlayer(saved || null);
+  return true;
 }
 
 function showKillToast(msg) {
@@ -1653,14 +1694,17 @@ function bindTap(el, fn) {
   if (!el) return;
   let locked = false;
   const run = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
     if (locked) return;
     locked = true;
-    try { fn(e); } finally { setTimeout(() => { locked = false; }, 350); }
+    try { fn(e); } catch (err) { console.error(err); }
+    setTimeout(() => { locked = false; }, 320);
   };
   el.addEventListener('click', run);
-  el.addEventListener('touchend', run, { passive: false });
+  // Mobile fallback: some WebViews suppress click inside scrollers
+  el.addEventListener('touchend', (e) => {
+    if (e.cancelable) e.preventDefault();
+    run(e);
+  }, { passive: false });
 }
 
 bindTap(btnStart, startCasualMatch);
@@ -1686,15 +1730,22 @@ bindTap(document.getElementById('btnSaveScore'), () => {
   showRankPanel();
 });
 
-// Auth UI (Robin's Arena style)
+// Auth UI
 bindTap(document.getElementById('btnLogin'), () => {
   document.getElementById('loginPanel')?.classList.add('visible');
-  setAuthMsg('Enter your email to continue');
+  setAuthMsg('Enter email or play as guest');
   document.getElementById('emailInput')?.focus();
 });
 bindTap(document.getElementById('btnLogout'), () => authLogout());
 bindTap(document.getElementById('btnSendCode'), () => authSendCode());
 bindTap(document.getElementById('btnVerifyCode'), () => authVerifyCode());
+bindTap(document.getElementById('btnGuest'), () => {
+  const n = document.getElementById('emailInput')?.value;
+  // if they typed a name without @, use as guest name
+  const name = (n && n.indexOf('@') < 0) ? n : null;
+  setGuestPlayer(name);
+  showKillToast('Welcome, ' + getDisplayName() + '!');
+});
 
 const emailInput = document.getElementById('emailInput');
 if (emailInput) {
@@ -1709,10 +1760,64 @@ if (otpInput) {
   });
 }
 
+// Global fallbacks for mobile WebViews (inline / delegated)
+window.__claim = {
+  casual: function () { startCasualMatch(); },
+  ranked: function () { startRankedMatch(); },
+  host: function () {
+    if (!requireAuth()) return;
+    if (typeof Peer === 'undefined') { alert('PeerJS failed to load'); return; }
+    hostGame();
+  },
+  join: function () {
+    if (!requireAuth()) return;
+    showJoinPanel();
+  },
+  guest: function () { setGuestPlayer(null); },
+  login: function () {
+    document.getElementById('loginPanel')?.classList.add('visible');
+  },
+  sendCode: function () { authSendCode(); },
+  verify: function () { authVerifyCode(); },
+  ranking: function () { showRankPanel(); }
+};
+
+// Event delegation on menu — most reliable on mobile scroll containers
+(function wireMenuDelegation() {
+  const root = document.getElementById('blocker');
+  if (!root) return;
+  let last = 0;
+  const handle = (e) => {
+    const t = e.target.closest('button, .char-card, .color-swatch, .pick-btn');
+    if (!t || !root.contains(t)) return;
+    const now = Date.now();
+    if (now - last < 280) return;
+    last = now;
+    const id = t.id;
+    if (id === 'btnStart') { e.preventDefault(); window.__claim.casual(); }
+    else if (id === 'btnRanked') { e.preventDefault(); window.__claim.ranked(); }
+    else if (id === 'btnHost') { e.preventDefault(); window.__claim.host(); }
+    else if (id === 'btnJoin') { e.preventDefault(); window.__claim.join(); }
+    else if (id === 'btnLogin') { e.preventDefault(); window.__claim.login(); }
+    else if (id === 'btnGuest') { e.preventDefault(); window.__claim.guest(); }
+    else if (id === 'btnSendCode') { e.preventDefault(); window.__claim.sendCode(); }
+    else if (id === 'btnVerifyCode') { e.preventDefault(); window.__claim.verify(); }
+    else if (id === 'rankBtn') { e.preventDefault(); window.__claim.ranking(); }
+    else if (id === 'btnLogout') { e.preventDefault(); authLogout(); }
+  };
+  root.addEventListener('click', handle, true);
+  root.addEventListener('touchend', handle, { capture: true, passive: false });
+})();
+
 initAuth();
 initCustomUI();
 loadProgression();
 updateRankedUI();
+// Always have a playable identity
+if (!isAuthenticated()) {
+  const saved = localStorage.getItem('claimio_guest_name');
+  if (saved) setGuestPlayer(saved);
+}
 
 document.addEventListener('pointerlockchange', () => {
   if (document.pointerLockElement === renderer.domElement) {
@@ -1903,23 +2008,20 @@ function mpOnData(data) {
     mp.remoteScore = data.s || 0;
   } else if (data.t === 'hello') {
     if (data.name) mp.remoteName = data.name;
-    mpStatus('Rival connected: ' + (mp.remoteName || 'Player'));
-    mp.ready = true;
-    if (mp.mode === 'host' && (game.state === 'menu' || game.state === 'ended')) {
-      CFG.ranked = false;
-      rebuildGridForMap(CASUAL_MAP);
+    mpStatus('Rival: ' + (mp.remoteName || 'Player'));
+  } else if (data.t === 'start') {
+    if (game.state === 'menu' || game.state === 'ended') {
       game.resetWorld();
       for (const b of game.bots) { scene.remove(b.mesh); scene.remove(b.light); }
       game.bots = [];
       ensureRemoteMesh();
-      mpSend({ t: 'start' });
       startGame();
     }
-  } else if (data.t === 'start') {
-    if (game.state === 'menu' || game.state === 'ended') {
-      CFG.ranked = false;
-      rebuildGridForMap(CASUAL_MAP);
-      game.resetWorld();
+  } else if (data.t === 'hello') {
+    mpStatus('Rival connected! Starting...');
+    mp.ready = true;
+    if (mp.mode === 'host') {
+      mpSend({ t: 'start' });
       for (const b of game.bots) { scene.remove(b.mesh); scene.remove(b.light); }
       game.bots = [];
       ensureRemoteMesh();
@@ -2372,8 +2474,11 @@ const game = {
   }
 };
 
+let _startLock = false;
 function startRankedMatch() {
+  if (_startLock) return;
   if (!requireAuth()) return;
+  _startLock = true;
   const overlay = document.getElementById('matchmakingOverlay');
   const sub = document.getElementById('mmSub');
   const L = getLeague(progression.mmr);
@@ -2381,31 +2486,45 @@ function startRankedMatch() {
   if (sub) sub.textContent = `${L.emoji} ${getLeagueLabel(progression.mmr)} · ${map.name}`;
   if (overlay) overlay.classList.add('visible');
 
-  // Soft matchmaking: short delay then bot lobby of your league
-  const wait = 1200 + Math.random() * 1800;
+  const wait = 900 + Math.random() * 1200;
   setTimeout(() => {
-    if (overlay) overlay.classList.remove('visible');
-    CFG.ranked = true;
-    mp.mode = 'solo';
-    rebuildGridForMap(map);
-    game.resetWorld();
-    // Scale bot aggression slightly by league
-    game.bots.forEach((b, i) => {
-      b.speed = CFG.BOT_SPEED * (0.95 + i * 0.05);
-    });
-    updateRankedUI();
-    startGame();
-    showKillToast(`${L.emoji} ${map.name}`);
+    try {
+      if (overlay) overlay.classList.remove('visible');
+      CFG.ranked = true;
+      mp.mode = 'solo';
+      rebuildGridForMap(map);
+      game.resetWorld();
+      game.bots.forEach((b, i) => {
+        b.speed = CFG.BOT_SPEED * (0.95 + i * 0.05);
+      });
+      updateRankedUI();
+      startGame();
+      showKillToast(`${L.emoji} ${map.name}`);
+    } catch (err) {
+      console.error(err);
+      alert('Ranked error: ' + err.message);
+    } finally {
+      setTimeout(() => { _startLock = false; }, 500);
+    }
   }, wait);
 }
 
 function startCasualMatch() {
+  if (_startLock) return;
   if (!requireAuth()) return;
-  CFG.ranked = false;
-  mp.mode = 'solo';
-  rebuildGridForMap(CASUAL_MAP);
-  game.resetWorld();
-  startGame();
+  _startLock = true;
+  try {
+    CFG.ranked = false;
+    mp.mode = 'solo';
+    rebuildGridForMap(CASUAL_MAP);
+    game.resetWorld();
+    startGame();
+  } catch (err) {
+    console.error(err);
+    alert('Start error: ' + err.message);
+  } finally {
+    setTimeout(() => { _startLock = false; }, 500);
+  }
 }
 
 window.addEventListener('resize', () => {
