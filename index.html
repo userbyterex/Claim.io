@@ -390,8 +390,8 @@
 const CFG = {
   GRID:26, TILE:2.8, PLAYER_SPEED:9.5, BOT_SPEED:7.0, BOT_COUNT:3, ROUND_TIME:90,
   CLAIM_CD:0.15, POWERUP_SPAWN:4.5, POWERUP_DURATION:8, BOMB_FUSE:2.2, BOMB_RADIUS:1,
-  WALL_H:1.4, FLAT_H:0.14, JUMP_FORCE:11.5, GRAVITY:24, START_BOMBS:3,
-  MAX_STACK:3, STACK_H:1.4, EYE_H:1.75,
+  WALL_H:1.25, FLAT_H:0.14, JUMP_FORCE:12.5, GRAVITY:22, START_BOMBS:3,
+  MAX_STACK:99, STACK_H:1.25, EYE_H:1.75,
   COLORS:{ neutral:0x8a8070, player:0xff4d6d, bot:[0x4ade80,0xfbbf24,0xa78bfa,0x94a3b8],
     powerupSpeed:0x38bdf8, powerupShield:0xa855f7, powerupBomb:0xf87171,
     sky:0x6EC6FF, grass:0x3d7a3a, grassFar:0x4a8a48 },
@@ -819,6 +819,22 @@ function getFloorUnder(px, pz, who) {
   return getWallTop(t);
 }
 
+function climbOntoOwnWall(pos, tx, tz) {
+  const idx = getTileIdx(tx, tz);
+  if (!idx) return false;
+  const t = tiles[idx.z] && tiles[idx.z][idx.x];
+  if (!t || t.owner !== 'player' || !t.mesh) return false;
+  const top = getWallTop(t);
+  const wx = idx.x * CFG.TILE + CFG.TILE / 2 - WH;
+  const wz = idx.z * CFG.TILE + CFG.TILE / 2 - WH;
+  pos.x = wx;
+  pos.z = wz;
+  camera.position.y = CFG.EYE_H + top;
+  playerVelY.v = 0;
+  onGround.value = true;
+  return true;
+}
+
 function tryMoveEntity(pos, dx, dz, who, feetY) {
   if (feetY == null) {
     feetY = (who === 'player') ? getFeetYFromCamera() : 0.05;
@@ -829,22 +845,16 @@ function tryMoveEntity(pos, dx, dz, who, feetY) {
   if (Math.abs(dz) > 0.0001 && canWalkAt(pos.x, pos.z + dz, who, feetY)) { pos.z += dz; return true; }
   if (Math.abs(dx) > 0.0001 && canWalkAt(pos.x + dx * 0.5, pos.z, who, feetY)) { pos.x += dx * 0.5; return true; }
   if (Math.abs(dz) > 0.0001 && canWalkAt(pos.x, pos.z + dz * 0.5, who, feetY)) { pos.z += dz * 0.5; return true; }
-  // Step-up onto adjacent own wall (1 level higher max)
-  if (who === 'player' && onGround.value) {
-    const stepTarget = [
-      [nx, nz], [pos.x + dx, pos.z], [pos.x, pos.z + dz]
+
+  // Climb onto own walls of ANY height by walking into them
+  if (who === 'player') {
+    const targets = [
+      [nx, nz], [pos.x + dx, pos.z], [pos.x, pos.z + dz],
+      [pos.x + Math.sign(dx || 0) * CFG.TILE * 0.6, pos.z],
+      [pos.x, pos.z + Math.sign(dz || 0) * CFG.TILE * 0.6]
     ];
-    for (const [tx, tz] of stepTarget) {
-      const idx = getTileIdx(tx, tz);
-      if (!idx) continue;
-      const t = tiles[idx.z][idx.x];
-      if (!t || t.owner !== 'player') continue;
-      const top = getWallTop(t);
-      if (top - feetY <= CFG.STACK_H + 0.2 && canWalkAt(tx, tz, who, top)) {
-        pos.x = tx; pos.z = tz;
-        camera.position.y = CFG.EYE_H + top;
-        return true;
-      }
+    for (const [tx, tz] of targets) {
+      if (climbOntoOwnWall(pos, tx, tz)) return true;
     }
   }
   return false;
@@ -936,17 +946,20 @@ function claimTile(x, z, owner, force = false) {
     t.rocky = false;
   }
 
-  // Own wall: STACK up (build on top) until MAX_STACK, then dismantle
+  // Own wall: always STACK higher (no height limit). 
+  // To dismantle one level: claim while on the GROUND looking at it (not standing on top).
   if (t.owner === owner) {
+    const feet = getTileIdx(camera.position.x, camera.position.z);
+    const onTop = feet && feet.x === x && feet.z === z && getFeetYFromCamera() > 0.4;
     const cur = getStack(t);
-    if (cur < CFG.MAX_STACK) {
+
+    // Standing on it or elevated nearby → build higher
+    if (onTop || getFeetYFromCamera() >= getWallTop(t) - 0.6 || owner !== 'player') {
       t.stack = cur + 1;
       setTileVisual(t, owner, true);
       if (owner === 'player') {
         game.playerScore++;
-        // If standing on this tile, rise with the stack
-        const feet = getTileIdx(camera.position.x, camera.position.z);
-        if (feet && feet.x === x && feet.z === z) {
+        if (onTop) {
           camera.position.y = CFG.EYE_H + getWallTop(t);
           onGround.value = true;
           playerVelY.v = 0;
@@ -959,14 +972,16 @@ function claimTile(x, z, owner, force = false) {
       }
       return true;
     }
-    // Max height: remove entire stack
-    if (owner === 'player') game.playerScore = Math.max(0, game.playerScore - cur);
-    else if (owner === 'rival') mp.remoteScore = Math.max(0, (mp.remoteScore || 0) - cur);
-    else if (String(owner).startsWith('bot')) {
-      const b = game.bots.find(bo => bo.id === owner);
-      if (b) b.score = Math.max(0, b.score - cur);
+
+    // Ground-level claim on own wall → remove one level
+    if (cur <= 1) {
+      if (owner === 'player') game.playerScore = Math.max(0, game.playerScore - 1);
+      t.owner = null; t.stack = 0; setTileVisual(t, null, true);
+    } else {
+      t.stack = cur - 1;
+      setTileVisual(t, owner, true);
+      if (owner === 'player') game.playerScore = Math.max(0, game.playerScore - 1);
     }
-    t.owner = null; t.stack = 0; setTileVisual(t, null, true);
     return true;
   }
 
@@ -1808,11 +1823,28 @@ function updateBombUI() {
 
 function tryJump() {
   if (game.state !== 'playing') return;
-  if (onGround.value) {
-    // Slightly stronger jump when on a stack so you can reach the next level
-    const floorY = getFloorUnder(camera.position.x, camera.position.z, 'player');
-    playerVelY.v = CFG.JUMP_FORCE + Math.min(2.5, floorY * 0.35);
-    onGround.value = false;
+  if (!onGround.value) return;
+  const floorY = getFloorUnder(camera.position.x, camera.position.z, 'player');
+  // Enough force to clear at least one stack level from current height
+  playerVelY.v = CFG.JUMP_FORCE + 1.5;
+  onGround.value = false;
+
+  // Also try climb forward onto own wall if facing one (mobile-friendly)
+  const forward = new THREE.Vector3();
+  camera.getWorldDirection(forward);
+  forward.y = 0;
+  if (forward.lengthSq() > 0.01) {
+    forward.normalize();
+    const tx = camera.position.x + forward.x * CFG.TILE * 0.85;
+    const tz = camera.position.z + forward.z * CFG.TILE * 0.85;
+    // Soft attempt: if own wall ahead, mount it after short hop
+    const idx = getTileIdx(tx, tz);
+    if (idx && tiles[idx.z] && tiles[idx.z][idx.x] && tiles[idx.z][idx.x].owner === 'player') {
+      setTimeout(() => {
+        if (game.state !== 'playing') return;
+        climbOntoOwnWall(camera.position, tx, tz);
+      }, 180);
+    }
   }
 }
 
